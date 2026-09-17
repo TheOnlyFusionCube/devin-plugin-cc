@@ -1,0 +1,11 @@
+devin-plugin-cc
+
+This product includes software derived from codex-plugin-cc
+(https://github.com/openai/codex-plugin-cc), a Claude Code plugin
+for the Codex CLI.
+
+Copyright 2026 OpenAI
+
+The original work is licensed under the Apache License, Version 2.0.
+Adapted files carry a header noting their origin; see the LICENSE
+file for the full license text.

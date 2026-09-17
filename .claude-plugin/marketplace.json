@@ -1,0 +1,21 @@
+{
+  "name": "cognition-devin",
+  "owner": {
+    "name": "Cognition"
+  },
+  "metadata": {
+    "description": "Devin plugins to use in Claude Code for delegation and code review.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "devin",
+      "description": "Use Devin from Claude Code to review code or delegate tasks.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Cognition"
+      },
+      "source": "./plugins/devin"
+    }
+  ]
+}
