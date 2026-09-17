@@ -17,6 +17,7 @@ import {
 } from "./lib/cloud.mjs";
 import {
   buildDevinPrintArgs,
+  DEFAULT_MODEL,
   devinFailureMessage,
   findLatestDevinSession,
   findTaskResumeCandidate,
@@ -170,13 +171,14 @@ async function cmdSetup(cwd, argv) {
 async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = null, permissionMode = null, sandbox = false, continueLast = false, resumeSessionId = null, title = null, meta = {} }) {
   const jobsDir = resolveJobsDir(cwd);
   fs.mkdirSync(jobsDir, { recursive: true });
+  const effectiveModel = model ?? DEFAULT_MODEL;
   const job = createJobRecord({
     id: generateJobId("devin"),
     kind,
     workspaceRoot: cwd,
     status: "queued",
     title: title ?? prompt.slice(0, 120).replace(/\s+/g, " ").trim(),
-    model,
+    model: effectiveModel,
     permissionMode,
     summary: title ?? null,
     promptPreview: prompt.slice(0, 500),
@@ -197,7 +199,7 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
     const startedMs = Date.now();
     const args = buildDevinPrintArgs({
       promptFile,
-      model,
+      model: effectiveModel,
       permissionMode,
       sandbox,
       continueLast,
@@ -218,7 +220,7 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
       progress?.("Sandbox unavailable — retrying without it.");
       const retryArgs = buildDevinPrintArgs({
         promptFile,
-        model,
+        model: effectiveModel,
         permissionMode: "normal",
         continueLast,
         resumeSessionId

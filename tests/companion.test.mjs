@@ -49,6 +49,9 @@ test("task runs devin -p and records a completed job", () => {
     // -p used a prompt file, not inline args
     assert.ok(fake.invocations().length >= 1);
     assert.equal(fake.lastPrompt(), "do the thing");
+    // default model is pinned to swe-2-max
+    const argsLine = fs.readFileSync(`${fake.marker}.args`, "utf8");
+    assert.match(argsLine, /--model swe-2-max/);
   } finally {
     repo.cleanup();
     fake.cleanup();
