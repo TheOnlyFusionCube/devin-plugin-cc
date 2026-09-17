@@ -6,6 +6,7 @@ import { binaryAvailable, formatCommandFailure, runCommand } from "./process.mjs
 
 export const DEVIN_BINARY = process.env.DEVIN_COMPANION_DEVIN_BINARY ?? "devin";
 export const SESSION_ID_ENV = "DEVIN_COMPANION_SESSION_ID";
+export const DEFAULT_MODEL = "swe-2-max";
 
 const VALID_PERMISSION_MODES = new Set([
   "normal",
@@ -80,7 +81,7 @@ export function normalizePermissionMode(mode) {
 
 export function buildDevinPrintArgs({
   prompt,
-  model = null,
+  model = DEFAULT_MODEL,
   permissionMode = null,
   resumeSessionId = null,
   continueLast = false,

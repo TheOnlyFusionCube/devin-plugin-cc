@@ -40,6 +40,13 @@ Then run:
 
 to verify the Devin binary, auth, and cloud credentials.
 
+### Codex, OpenCode, Cursor, Gemini CLI, and other agents
+
+The runtime is a plain Node CLI — every agent can drive it; only the command wrappers are Claude-specific. Two standard entry points ship in this repo:
+
+- **[AGENTS.md](AGENTS.md)** — read natively by Codex CLI, OpenCode, Cursor, Gemini CLI, Amp, and Jules. It documents the full `devin-companion.mjs` command surface.
+- **[skills/devin/](skills/devin/SKILL.md)** — a portable [agent skill](https://agentskills.io). Copy it to `~/.codex/skills/devin/`, `.agents/skills/devin/` in your project, or your tool's skills dir.
+
 ## Commands
 
 | Command | What it does |
@@ -55,6 +62,8 @@ to verify the Devin binary, auth, and cloud credentials.
 
 Review commands are strictly read-only: they never apply fixes. Arguments are parsed POSIX-style — flags first, then free text passed through verbatim.
 
+The default model is pinned to **`swe-2-max`** (SWE-2 Max); pass `--model <id>` to any review/task command to override — `devin models list` shows what your account can use.
+
 ## Hooks
 
 - **SessionStart** — exports session metadata for job attribution.
@@ -68,6 +77,8 @@ Per-workspace state lives outside the repo under the OS temp dir (`<tmp>/devin-c
 ## Layout
 
 ```text
+AGENTS.md                         # cross-agent instructions (Codex, OpenCode, Cursor, …)
+skills/devin/SKILL.md             # portable agent skill (agentskills.io format)
 .claude-plugin/marketplace.json   # marketplace manifest
 plugins/devin/
   .claude-plugin/plugin.json      # plugin manifest
@@ -75,7 +86,7 @@ plugins/devin/
   agents/devin-rescue.md          # thin forwarding subagent
   hooks/hooks.json                # lifecycle + stop-gate wiring
   prompts/*.md                    # review / adversarial / gate templates
-  scripts/devin-companion.mjs     # CLI dispatcher
+  scripts/devin-companion.mjs     # CLI dispatcher — the universal entry point
   scripts/lib/*.mjs               # args, state, jobs, git, devin, cloud, render
   skills/*/SKILL.md               # runtime, result-handling, prompting docs
 tests/                            # node:test suite + fake devin fixture
