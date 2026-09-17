@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Devin in Claude Code: read-only AI code reviews, adversarial reviews, delegated coding tasks, and cloud handoffs to app.devin.ai sessions.",
   "author": {
-    "name": "Cognition"
+    "name": "devin-plugin-cc contributors"
   },
   "keywords": ["devin", "devin-ai", "code-review", "ai-code-review", "coding-agent", "handoff"],
   "homepage": "https://github.com/TheOnlyFusionCube/devin-plugin-cc"
