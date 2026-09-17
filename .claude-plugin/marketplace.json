@@ -1,7 +1,7 @@
 {
-  "name": "cognition-devin",
+  "name": "devin-plugin-cc",
   "owner": {
-    "name": "Cognition"
+    "name": "devin-plugin-cc contributors"
   },
   "metadata": {
     "description": "Devin plugins for Claude Code: AI code review, task delegation, and cloud handoffs.",
@@ -13,7 +13,7 @@
       "description": "Devin in Claude Code: read-only AI code reviews, adversarial reviews, delegated coding tasks, and cloud handoffs to app.devin.ai sessions.",
       "version": "1.0.0",
       "author": {
-        "name": "Cognition"
+        "name": "devin-plugin-cc contributors"
       },
       "source": "./plugins/devin"
     }

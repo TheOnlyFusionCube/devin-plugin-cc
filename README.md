@@ -94,6 +94,10 @@ node --check <file>   # syntax-check any module
 
 Derived from [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) by OpenAI — original concept, architecture, and much of the companion runtime are theirs, adapted for the Devin CLI and Devin API. See [NOTICE](NOTICE).
 
+## Disclaimer
+
+`devin-plugin-cc` is an independent community project. It is **not affiliated with, endorsed by, or sponsored by Cognition AI** (the company behind Devin and Devin Desktop), Anthropic, or OpenAI. "Devin", "Devin Desktop", "Claude", "Claude Code", and "Codex" are trademarks of their respective owners; references here are descriptive only.
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
