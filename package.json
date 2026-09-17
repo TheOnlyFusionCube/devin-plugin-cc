@@ -1,7 +1,7 @@
 {
   "name": "devin-plugin-cc",
   "version": "1.0.0",
-  "description": "Use Devin from inside Claude Code for code reviews or to delegate tasks.",
+  "description": "Claude Code plugin for Devin: AI code reviews, delegated coding tasks, and cloud handoffs to app.devin.ai from slash commands.",
   "type": "module",
   "engines": {
     "node": ">=18.18"
@@ -9,5 +9,26 @@
   "scripts": {
     "test": "node --test"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheOnlyFusionCube/devin-plugin-cc.git"
+  },
+  "homepage": "https://github.com/TheOnlyFusionCube/devin-plugin-cc",
+  "bugs": "https://github.com/TheOnlyFusionCube/devin-plugin-cc/issues",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "devin",
+    "devin-ai",
+    "devin-cli",
+    "code-review",
+    "ai-code-review",
+    "coding-agent",
+    "ai-agents",
+    "slash-commands",
+    "cognition",
+    "anthropic",
+    "plugin"
+  ],
   "license": "Apache-2.0"
 }
