@@ -1,0 +1,13 @@
+{
+  "name": "devin-plugin-cc",
+  "version": "1.0.0",
+  "description": "Use Devin from inside Claude Code for code reviews or to delegate tasks.",
+  "type": "module",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "Apache-2.0"
+}
