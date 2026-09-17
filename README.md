@@ -1,6 +1,12 @@
-# devin-plugin-cc
+# devin-plugin-cc — Devin plugin for Claude Code
 
-A Claude Code plugin that brings Devin into your local workflow: read-only code reviews, delegated fix-up tasks via a rescue agent, cloud handoffs to Devin's web sessions, and an optional stop-time review gate — all driven by the local Devin CLI and the Devin API.
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
+[![Devin CLI](https://img.shields.io/badge/Devin-CLI%20%2B%20API-00c7b7)](https://docs.devin.ai/cli)
+
+**A Claude Code plugin that puts [Devin](https://devin.ai) inside your terminal workflow**: AI code reviews, delegated coding tasks, and cloud handoffs to Devin's autonomous sessions — all from slash commands like `/devin:review` and `/devin:handoff`. Powered by the local [Devin CLI](https://docs.devin.ai/cli) (`devin -p` one-shot mode) and the Devin API.
+
+What you get: read-only AI code reviews of your working tree or branch diff, adversarial review for design tradeoffs, a thin `devin-rescue` subagent that hands implementation work to Devin, cloud handoffs that carry your repo + branch + uncommitted diff into an app.devin.ai session, background job control (`status`/`result`/`cancel`), and an optional stop-time review gate that blocks session end on a `BLOCK` verdict.
 
 Modeled after [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc), adapted to Devin's interfaces:
 

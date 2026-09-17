@@ -4,13 +4,13 @@
     "name": "Cognition"
   },
   "metadata": {
-    "description": "Devin plugins to use in Claude Code for delegation and code review.",
+    "description": "Devin plugins for Claude Code: AI code review, task delegation, and cloud handoffs.",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "devin",
-      "description": "Use Devin from Claude Code to review code or delegate tasks.",
+      "description": "Devin in Claude Code: read-only AI code reviews, adversarial reviews, delegated coding tasks, and cloud handoffs to app.devin.ai sessions.",
       "version": "1.0.0",
       "author": {
         "name": "Cognition"
