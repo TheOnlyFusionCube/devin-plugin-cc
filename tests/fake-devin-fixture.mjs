@@ -4,7 +4,7 @@ import path from "node:path";
 
 // Creates a fake `devin` executable that answers the subcommands the companion
 // uses. The marker file records each -p invocation's prompt file for assertions.
-export function createFakeDevin({ responseText = "FAKE_DEVIN_OUTPUT", exitCode = 0, failAuth = false } = {}) {
+export function createFakeDevin({ responseText = "FAKE_DEVIN_OUTPUT", exitCode = 0, failAuth = false, loggedOutExitZero = false } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fake-devin-"));
   const marker = path.join(dir, "invocations.jsonl");
   const script = `#!/usr/bin/env bash
@@ -20,6 +20,12 @@ case "$cmd" in
     if [ "${failAuth}" = "true" ]; then
       echo "Not logged in" >&2
       exit 1
+    fi
+    if [ "${loggedOutExitZero}" = "true" ]; then
+      echo "Not logged in."
+      echo "  Credentials path: /Users/fake/.local/share/devin/credentials.toml"
+      echo "Run \\\`devin auth login\\\` to authenticate."
+      exit 0
     fi
     echo "Logged in (via Devin)."
     echo "  Email:             fake@example.com"

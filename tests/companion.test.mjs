@@ -133,6 +133,26 @@ test("setup reports ready=false when devin auth fails", () => {
   }
 });
 
+test("setup reports authenticated=false when devin auth status exits 0 while logged out", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ loggedOutExitZero: true });
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    // cmdSetup's binary probe still shells out to the literal "devin" name
+    // (a separate bug), so put the fake binary on PATH too, not just
+    // DEVIN_COMPANION_DEVIN_BINARY, to isolate this test to the auth parsing fix.
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir, PATH: `${fake.dir}:${process.env.PATH}` };
+    const result = runCompanion(["setup", "--json"], { cwd: repo.dir, env });
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.devin.installed, true);
+    assert.equal(payload.devin.authenticated, false);
+    assert.equal(payload.ready, false);
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
+
 test("setup --enable-review-gate persists config", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();

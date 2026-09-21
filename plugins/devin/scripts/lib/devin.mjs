@@ -51,7 +51,7 @@ export function getDevinAuthStatus(cwd) {
     return { authenticated: false, detail };
   }
   const output = result.stdout;
-  const loggedIn = /logged in/i.test(output);
+  const loggedIn = /^\s*logged in/im.test(output) && !/\bnot logged in\b/i.test(output);
   const email = output.match(/Email:\s*(\S+)/)?.[1] ?? null;
   const tier = output.match(/Tier:\s*(.+)/)?.[1]?.trim() ?? null;
   return {
