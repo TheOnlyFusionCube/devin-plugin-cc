@@ -116,7 +116,7 @@ export function renderStoredJobResult(job) {
   return `Job ${job?.id ?? "?"} has no stored output yet (status: ${job?.status ?? "unknown"}).\n`;
 }
 
-export function renderCancelReport({ job, delivered }) {
+export function renderCancelReport({ job, delivered, remoteStopped = null }) {
   const lines = [];
   if (delivered) {
     lines.push(`Cancellation requested for job ${job.id} (${job.kind}).`);
@@ -124,7 +124,11 @@ export function renderCancelReport({ job, delivered }) {
     lines.push(`Job ${job.id} (${job.kind}) was already finished or its process is gone; marked cancelled.`);
   }
   if (job.sessionUrl) {
-    lines.push(`Cloud session: ${job.sessionUrl} — stop or message it from the Devin web app if it is still running.`);
+    lines.push(
+      remoteStopped
+        ? `Cloud session: ${job.sessionUrl} (stopped remotely).`
+        : `Cloud session: ${job.sessionUrl} (could not confirm the remote stop; check the Devin web app).`
+    );
   }
   return `${lines.join("\n")}\n`;
 }

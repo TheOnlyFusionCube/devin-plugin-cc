@@ -112,7 +112,7 @@ export async function getCloudSession(sessionId, config = getCloudConfig()) {
     statusDetail: body?.status_detail ?? null,
     title: body?.title ?? null,
     url: body?.url ?? null,
-    pullRequestUrl: body?.pull_request?.url ?? body?.pull_requests?.[0]?.url ?? null,
+    pullRequestUrl: body?.pull_request?.url ?? body?.pull_requests?.[0]?.pr_url ?? body?.pull_requests?.[0]?.url ?? null,
     structuredOutput: body?.structured_output ?? null,
     raw: body
   };
@@ -124,6 +124,18 @@ export async function sendCloudMessage(sessionId, message, config = getCloudConf
   }
   const base = resolveApiBase(config);
   return apiRequest(config, "POST", `${base}/sessions/${sessionId}/messages`, { message });
+}
+
+// Terminates the remote session outright, instead of just asking it to stop.
+// Both API versions expose the same relative path: DELETE /v1/sessions/{id}
+// for personal keys, DELETE /v3/organizations/{org_id}/sessions/{id} for
+// service keys, so resolveApiBase already picks the right base for either.
+export async function stopCloudSession(sessionId, config = getCloudConfig()) {
+  if (!config.available) {
+    throw new Error("DEVIN_API_KEY is not set.");
+  }
+  const base = resolveApiBase(config);
+  return apiRequest(config, "DELETE", `${base}/sessions/${sessionId}`);
 }
 
 export function isTerminalCloudStatus({ status, statusDetail }) {
