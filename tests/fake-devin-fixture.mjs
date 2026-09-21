@@ -4,7 +4,7 @@ import path from "node:path";
 
 // Creates a fake `devin` executable that answers the subcommands the companion
 // uses. The marker file records each -p invocation's prompt file for assertions.
-export function createFakeDevin({ responseText = "FAKE_DEVIN_OUTPUT", exitCode = 0, failAuth = false } = {}) {
+export function createFakeDevin({ responseText = "FAKE_DEVIN_OUTPUT", exitCode = 0, failAuth = false, upgradeToProError = false } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fake-devin-"));
   const marker = path.join(dir, "invocations.jsonl");
   const script = `#!/usr/bin/env bash
@@ -40,6 +40,10 @@ JSON
     echo "{\\"prompt_file\\":\\"$prompt_file\\"}" >> "$marker"
     if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
       cp "$prompt_file" "\${marker}.lastprompt"
+    fi
+    if [ "${upgradeToProError}" = "true" ]; then
+      echo "Error: Upgrade to Pro to access this model (https://devin.ai/pricing)" >&2
+      exit 1
     fi
     echo "${responseText}"
     exit ${exitCode}

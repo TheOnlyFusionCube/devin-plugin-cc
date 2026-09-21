@@ -205,3 +205,53 @@ test("cancel reports finished for completed jobs", () => {
     fake.cleanup();
   }
 });
+
+test("upgrade to pro error shows hint when --model not passed", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ upgradeToProError: true });
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
+    const result = runCompanion(["task", "do something"], { cwd: repo.dir, env });
+    assert.match(result.stdout, /The default model \(swe-2-max\) is not available on your Devin plan/);
+    assert.match(result.stdout, /Re-run with --model <id>/);
+    assert.match(result.stdout, /DEVIN_COMPANION_DEFAULT_MODEL/);
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
+
+test("upgrade to pro error does not show hint when --model passed explicitly", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ upgradeToProError: true });
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
+    const result = runCompanion(["task", "--model", "custom-model", "do something"], { cwd: repo.dir, env });
+    assert.doesNotMatch(result.stdout, /The default model .* is not available on your Devin plan/);
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
+
+test("DEVIN_COMPANION_DEFAULT_MODEL changes the --model passed", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin();
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir, DEVIN_COMPANION_DEFAULT_MODEL: "custom-default-model" };
+    const result = runCompanion(["task", "do the thing"], { cwd: repo.dir, env });
+    assert.equal(result.status, 0, result.stderr);
+    const argsLine = fs.readFileSync(`${fake.marker}.args`, "utf8");
+    assert.match(argsLine, /--model custom-default-model/);
+    assert.doesNotMatch(argsLine, /--model swe-2-max/);
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});

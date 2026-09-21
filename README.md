@@ -64,6 +64,8 @@ Review commands are strictly read-only: they never apply fixes. Arguments are pa
 
 The default model is pinned to **`swe-2-max`** (SWE-2 Max); pass `--model <id>` to any review/task command to override — `devin models list` shows what your account can use.
 
+To change the default for every run, set `DEVIN_COMPANION_DEFAULT_MODEL` (useful on Devin Free, where `swe-2-max` is not available).
+
 ## Hooks
 
 - **SessionStart** — exports session metadata for job attribution.

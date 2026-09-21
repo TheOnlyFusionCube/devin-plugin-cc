@@ -168,7 +168,7 @@ async function cmdSetup(cwd, argv) {
   outputResult(report, renderSetupReport(report), options.json);
 }
 
-async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = null, permissionMode = null, sandbox = false, continueLast = false, resumeSessionId = null, title = null, meta = {} }) {
+async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = null, modelExplicit = false, permissionMode = null, sandbox = false, continueLast = false, resumeSessionId = null, title = null, meta = {} }) {
   const jobsDir = resolveJobsDir(cwd);
   fs.mkdirSync(jobsDir, { recursive: true });
   const effectiveModel = model ?? DEFAULT_MODEL;
@@ -234,6 +234,11 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
 
     const rawOutput = result.stdout.trim();
     const devinSession = findLatestDevinSession(cwd, { createdAfterMs: startedMs - 60_000 });
+    let rendered = rawOutput ? `${rawOutput}\n` : `Devin produced no output (exit ${result.exitStatus}).\n${devinFailureMessage(result)}\n`;
+    // If the run failed with an "upgrade to pro" error and the user didn't pass --model explicitly, append a hint.
+    if (result.exitStatus !== 0 && !modelExplicit && /upgrade to pro/i.test(`${result.stderr}\n${result.stdout}`)) {
+      rendered += `The default model (${effectiveModel}) is not available on your Devin plan. Re-run with --model <id> (see \`devin models list\`) or set DEVIN_COMPANION_DEFAULT_MODEL.\n`;
+    }
     return {
       exitStatus: result.exitStatus,
       payload: {
@@ -241,7 +246,7 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
         stderr: result.stderr.trim() || null,
         exitStatus: result.exitStatus
       },
-      rendered: rawOutput ? `${rawOutput}\n` : `Devin produced no output (exit ${result.exitStatus}).\n${devinFailureMessage(result)}\n`,
+      rendered,
       summary: rawOutput.split("\n").find((line) => line.trim())?.slice(0, 140) ?? null,
       devinSessionId: devinSession?.id ?? devinSession?.short_id ?? null
     };
@@ -279,6 +284,7 @@ async function cmdReview(cwd, argv, kind) {
     kind,
     prompt,
     model: options.model ?? null,
+    modelExplicit: options.model != null,
     permissionMode: "autonomous",
     sandbox: true,
     title: `${kind === "adversarial-review" ? "Adversarial review" : "Review"} of ${context.target.label}`,
@@ -321,6 +327,7 @@ async function cmdTask(cwd, argv) {
     kind: "task",
     prompt: taskText,
     model: options.model ?? null,
+    modelExplicit: options.model != null,
     permissionMode,
     sandbox,
     continueLast,
