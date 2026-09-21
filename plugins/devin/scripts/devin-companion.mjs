@@ -23,6 +23,7 @@ import {
   findTaskResumeCandidate,
   getDevinAuthStatus,
   getDevinAvailability,
+  isOnboardingOutput,
   normalizePermissionMode,
   runDevinPrint
 } from "./lib/devin.mjs";
@@ -234,6 +235,21 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
 
     const rawOutput = result.stdout.trim();
     const devinSession = findLatestDevinSession(cwd, { createdAfterMs: startedMs - 60_000 });
+
+    if (isOnboardingOutput(rawOutput)) {
+      return {
+        exitStatus: 1,
+        payload: {
+          rawOutput,
+          stderr: result.stderr.trim() || null,
+          exitStatus: result.exitStatus
+        },
+        rendered: "Devin CLI showed its first-run welcome screen instead of running the task. Run the command again.\n",
+        summary: "Devin CLI first-run onboarding",
+        devinSessionId: devinSession?.id ?? devinSession?.short_id ?? null
+      };
+    }
+
     return {
       exitStatus: result.exitStatus,
       payload: {

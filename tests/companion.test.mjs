@@ -205,3 +205,27 @@ test("cancel reports finished for completed jobs", () => {
     fake.cleanup();
   }
 });
+
+test("task with onboarding output is marked as failed with hint", () => {
+  const repo = createTempRepo();
+  const onboardingText = "Welcome to Devin CLI!\n ✓ Logged in as someone@example.com.\nYou're all set. Run devin to get started.";
+  const fake = createFakeDevin({ responseText: onboardingText });
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
+    const result = runCompanion(["task", "do something"], { cwd: repo.dir, env });
+    assert.match(result.stdout, /Devin CLI showed its first-run welcome screen/);
+
+    const status = runCompanion(["status", "--json"], { cwd: repo.dir, env });
+    const payload = JSON.parse(status.stdout);
+    assert.equal(payload.jobs.length, 1);
+    assert.equal(payload.jobs[0].status, "failed");
+
+    const rendered = runCompanion(["result", payload.jobs[0].id], { cwd: repo.dir, env });
+    assert.match(rendered.stdout, /Devin CLI showed its first-run welcome screen instead of running the task/);
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});

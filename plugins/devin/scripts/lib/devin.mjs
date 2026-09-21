@@ -208,6 +208,14 @@ export function runDevinPrint({ cwd, args, onStderr = null, onSpawn = null } = {
   });
 }
 
+export function isOnboardingOutput(text) {
+  const stripped = text.replace(/\x1b\[[0-9;]*m/g, "");
+  const hasWelcome = /Welcome to Devin CLI!/i.test(stripped);
+  const hasLoggedIn = /Logged in as/i.test(stripped);
+  const hasRunPrompt = /Run .*devin.* to get started/i.test(stripped);
+  return hasWelcome && hasLoggedIn && hasRunPrompt;
+}
+
 export function devinFailureMessage(result) {
   const stderr = (result.stderr ?? "").trim();
   const stdout = (result.stdout ?? "").trim();
