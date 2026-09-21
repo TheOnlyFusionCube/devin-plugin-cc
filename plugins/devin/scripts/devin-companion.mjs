@@ -18,6 +18,7 @@ import {
 import {
   buildDevinPrintArgs,
   DEFAULT_MODEL,
+  DEVIN_BINARY,
   devinFailureMessage,
   findLatestDevinSession,
   findTaskResumeCandidate,
@@ -144,7 +145,7 @@ async function cmdSetup(cwd, argv) {
     setConfig(cwd, "stopReviewGate", false);
   }
 
-  const binaryProbe = binaryAvailable("devin", ["version"], { cwd });
+  const binaryProbe = binaryAvailable(DEVIN_BINARY, ["version"], { cwd });
   const auth = binaryProbe.available ? getDevinAuthStatus(cwd) : { authenticated: false, detail: "devin not installed" };
   const cloud = getCloudConfig();
   const gitProbe = binaryAvailable("git", ["--version"], { cwd });
