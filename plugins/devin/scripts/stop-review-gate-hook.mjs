@@ -116,20 +116,19 @@ function runStopReview(cwd, input = {}) {
     };
   }
 
-  if (result.status !== 0) {
-    const detail = String(result.stderr || result.stdout || "").trim();
-    return {
-      verdict: null,
-      reason: detail
-        ? `The stop-time Devin review task failed: ${detail}`
-        : "The stop-time Devin review task failed. Run /devin:review --wait manually or bypass the gate."
-    };
-  }
-
   try {
     const payload = JSON.parse(result.stdout);
     return parseStopReviewOutput(payload?.rawOutput);
   } catch {
+    if (result.status !== 0) {
+      const detail = String(result.stderr || result.stdout || "").trim();
+      return {
+        verdict: null,
+        reason: detail
+          ? `The stop-time Devin review task failed: ${detail}`
+          : "The stop-time Devin review task failed. Run /devin:review --wait manually or bypass the gate."
+      };
+    }
     return {
       verdict: null,
       reason: "The stop-time Devin review task returned invalid JSON. Run /devin:review --wait manually or bypass the gate."

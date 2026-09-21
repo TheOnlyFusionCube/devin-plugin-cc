@@ -293,6 +293,9 @@ async function cmdReview(cwd, argv, kind) {
     rendered: execution.rendered
   };
   outputResult(payload, execution.rendered, options.json);
+  if (execution.exitStatus !== 0) {
+    process.exitCode = 1;
+  }
 }
 
 async function cmdTask(cwd, argv) {
@@ -337,6 +340,9 @@ async function cmdTask(cwd, argv) {
     rendered: execution.rendered
   };
   outputResult(payload, execution.rendered, options.json);
+  if (execution.exitStatus !== 0) {
+    process.exitCode = 1;
+  }
 }
 
 async function cmdResumeCandidate(cwd, argv) {

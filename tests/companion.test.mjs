@@ -205,3 +205,48 @@ test("cancel reports finished for completed jobs", () => {
     fake.cleanup();
   }
 });
+
+test("task exits non-zero when devin fails", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ exitCode: 1, responseText: "ERROR: something failed" });
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
+    const result = runCompanion(["task", "do", "the", "thing"], { cwd: repo.dir, env });
+    assert.notEqual(result.status, 0, "companion should exit non-zero when devin fails");
+    assert.match(result.stdout, /ERROR: something failed/);
+
+    const status = runCompanion(["status", "--json"], { cwd: repo.dir, env });
+    const payload = JSON.parse(status.stdout);
+    assert.equal(payload.jobs.length, 1);
+    assert.equal(payload.jobs[0].kind, "task");
+    assert.equal(payload.jobs[0].status, "failed");
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
+
+test("review exits non-zero when devin fails", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ exitCode: 1, responseText: "ERROR: review failed" });
+  initGitRepo(repo.dir);
+  fs.writeFileSync(path.join(repo.dir, "hello.txt"), "hello changed\n");
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
+    const result = runCompanion(["review", "--wait"], { cwd: repo.dir, env });
+    assert.notEqual(result.status, 0, "companion should exit non-zero when devin fails");
+    assert.match(result.stdout, /ERROR: review failed/);
+
+    const status = runCompanion(["status", "--json"], { cwd: repo.dir, env });
+    const payload = JSON.parse(status.stdout);
+    assert.equal(payload.jobs.length, 1);
+    assert.equal(payload.jobs[0].kind, "review");
+    assert.equal(payload.jobs[0].status, "failed");
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
