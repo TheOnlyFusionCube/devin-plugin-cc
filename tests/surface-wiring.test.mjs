@@ -67,6 +67,10 @@ test("documented capabilities match shipped surfaces and referenced files exist"
   assert.match(readme, /-s devin -s fusion/);
   assert.doesNotMatch(readme, /-s '\*'/);
 
+  // README links to the machine-readable entry point and the CI workflow.
+  assert.match(readme, /\[llms\.txt\]\(llms\.txt\)/);
+  assert.match(readme, /actions\/workflows\/ci\.yml\/badge\.svg/);
+
   // Every relative link in llms.txt resolves to a real file.
   for (const [, href] of llms.matchAll(/\]\(([^)]+)\)/g)) {
     if (!href.startsWith("http")) {

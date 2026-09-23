@@ -1,6 +1,7 @@
 # Devin Plugin for Claude Code and Codex
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/TheOnlyFusionCube/devin-plugin-cc/actions/workflows/ci.yml/badge.svg)](https://github.com/TheOnlyFusionCube/devin-plugin-cc/actions/workflows/ci.yml)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
 [![Devin CLI](https://img.shields.io/badge/Devin-CLI%20%2B%20API-00c7b7)](https://docs.devin.ai/cli)
 
@@ -70,10 +71,11 @@ to verify the Devin binary, auth, and cloud credentials.
 
 ### Codex, OpenCode, Cursor, Gemini CLI, and other agents
 
-The runtime is a plain Node CLI — every agent can drive it; only the command wrappers are Claude-specific. Two standard entry points ship in this repo:
+The runtime is a plain Node CLI — every agent can drive it; only the command wrappers are Claude-specific. Three standard entry points ship in this repo:
 
 - **[AGENTS.md](AGENTS.md)** — read natively by Codex CLI, OpenCode, Cursor, Gemini CLI, Amp, Jules, and Aider. It documents the full `devin-companion.mjs` command surface.
 - **[skills/devin/](skills/devin/SKILL.md)** and **[skills/fusion/](skills/fusion/SKILL.md)** — portable [agent skills](https://agentskills.io). Copy both to `~/.codex/skills/`, `.agents/skills/` in your project, or your tool's skills dir.
+- **[llms.txt](llms.txt)** — a compact machine-readable summary and doc map at the repo root for agents and AI search tools.
 
 Codex has a native plugin install that uses the same marketplace manifest:
 
