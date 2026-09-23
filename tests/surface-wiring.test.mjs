@@ -6,18 +6,32 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8");
+const exists = (relativePath) => fs.existsSync(path.join(root, relativePath));
 
 test("package install surface is wired", () => {
   const packageJson = JSON.parse(read("package.json"));
   const workflow = read(".github/workflows/ci.yml");
 
-  assert.equal(packageJson.version, "1.0.1");
   assert.equal(packageJson.scripts.prepare, "node scripts/install.mjs");
   assert.equal(packageJson.scripts.doctor, "node plugins/devin/scripts/devin-companion.mjs setup");
-  assert.equal(packageJson.bin["devin-companion"], "./plugins/devin/scripts/devin-companion.mjs");
-  assert.match(workflow, /npm install/);
+  const binTargets = Object.values(packageJson.bin);
+  assert.equal(binTargets.length, 1);
+  assert.ok(exists(binTargets[0]), `bin target missing: ${binTargets[0]}`);
+  assert.match(workflow, /npm ci|npm install/);
   assert.match(workflow, /npm test/);
   assert.match(workflow, /npm run doctor/);
+});
+
+test("version is consistent across all manifests", () => {
+  const packageJson = JSON.parse(read("package.json"));
+  const marketplace = JSON.parse(read(".claude-plugin/marketplace.json"));
+  const plugin = JSON.parse(read("plugins/devin/.claude-plugin/plugin.json"));
+
+  assert.equal(marketplace.metadata.version, packageJson.version);
+  assert.equal(plugin.version, packageJson.version);
+  for (const entry of marketplace.plugins) {
+    assert.equal(entry.version, packageJson.version);
+  }
 });
 
 test("Fusion surfaces preserve each host's lead model and shared sidekick", () => {
@@ -30,9 +44,11 @@ test("Fusion surfaces preserve each host's lead model and shared sidekick", () =
   assert.match(codex, /Lead model: GPT 6 Astra/);
   assert.match(codex, /devin-companion\.mjs task --write/);
   assert.match(codex, /swe-2-max/);
+  assert.match(codex, /\$fusion/);
+  assert.doesNotMatch(codex, /`\/fusion`/);
 });
 
-test("SEO surfaces describe the shipped cross-agent capabilities", () => {
+test("documented capabilities match shipped surfaces and referenced files exist", () => {
   const packageJson = JSON.parse(read("package.json"));
   const marketplace = JSON.parse(read(".claude-plugin/marketplace.json"));
   const plugin = JSON.parse(read("plugins/devin/.claude-plugin/plugin.json"));
@@ -42,10 +58,19 @@ test("SEO surfaces describe the shipped cross-agent capabilities", () => {
   for (const keyword of ["codex", "codex-cli", "agent-skills", "fusion", "developer-tools"]) {
     assert.ok(packageJson.keywords.includes(keyword), `missing npm keyword: ${keyword}`);
   }
-  assert.match(readme, /^# Devin Plugin for Claude Code and Codex/m);
-  assert.match(readme, /Frequently asked questions/);
-  assert.match(llms, /Claude Code and Codex/);
-  assert.match(llms, /skills\/fusion\/SKILL\.md/);
+  assert.match(packageJson.description, /Claude Code and Codex/);
   assert.match(marketplace.metadata.description, /Claude Code and Codex/);
   assert.match(plugin.description, /Fusion sidekick workflows/);
+  assert.match(readme, /^# .*Claude Code and Codex/m);
+
+  // The Codex install path must select only the two public skills.
+  assert.match(readme, /-s devin -s fusion/);
+  assert.doesNotMatch(readme, /-s '\*'/);
+
+  // Every relative link in llms.txt resolves to a real file.
+  for (const [, href] of llms.matchAll(/\]\(([^)]+)\)/g)) {
+    if (!href.startsWith("http")) {
+      assert.ok(exists(href), `llms.txt links to missing file: ${href}`);
+    }
+  }
 });

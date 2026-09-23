@@ -26,16 +26,16 @@ passed through verbatim as prompt text.
 | `setup` | Check devin binary, auth, `DEVIN_API_KEY`; toggle review gate | `--enable-review-gate`, `--disable-review-gate`, `--json` |
 | `review` | Read-only review of working tree or `--base <ref>` diff | `--wait`, `--background`, `--base`, `--scope`, `--model` |
 | `adversarial-review` | Read-only review of design choices, tradeoffs, failure modes | same as `review` |
-| `task` | Delegate work to local Devin (`devin -p`); write-capable by default | `--read-only`, `--write`, `--sandbox`, `--resume`, `--resume-id`, `--model`, `--permission-mode` |
+| `task` | Delegate work to local Devin (`devin -p`); write-capable by default | `--read-only`, `--write`, `--sandbox`, `--resume`, `--resume-last`, `--resume-id`, `--fresh`, `--wait`, `--background`, `--model`, `--permission-mode` |
 | `task-resume-candidate` | Find the session a task could resume (`--json`) | — |
-| `handoff` | Create a cloud session at app.devin.ai with repo+branch+diff context | `--wait`, `--background`, `--context`, `--tag`, `--poll-interval-ms` |
+| `handoff` | Create a cloud session at app.devin.ai with repo+branch+diff context | `--wait`, `--background`, `--context`, `--tag`, `--poll-interval-ms` (both poll to terminal — detach in your own agent loop instead) |
 | `status` | List jobs; `status <id>` for one; `--wait` polls to terminal | `--json`, `--timeout-ms` |
 | `result` | Print a finished job's stored output verbatim | `--json` |
 | `cancel` | Kill a running job's process tree (or stop a cloud session) | — |
 
 Every command accepts `--json` for machine-readable output.
 
-Fusion surfaces are agent prompts, not a second runtime command. Claude Code uses `/devin:fusion` with Claude Opus 5.5 as the frontier lead. Codex uses `/fusion` from `skills/fusion/` with GPT 6 Astra as the frontier lead. Both reuse `task` for Devin's sidekick work, whose default model remains `swe-2-max`.
+Fusion surfaces are agent prompts, not a second runtime command. Claude Code uses `/devin:fusion` with Claude Opus 5.5 as the frontier lead. Codex uses `$fusion` from `skills/fusion/` with GPT 6 Astra as the frontier lead (Codex skills are invoked with `$`, not `/`). Both reuse `task` for Devin's sidekick work, whose default model remains `swe-2-max`.
 
 ## Defaults and safety
 
@@ -54,8 +54,10 @@ Fusion surfaces are agent prompts, not a second runtime command. Claude Code use
 
 - **Claude Code**: install as a plugin (see README). Slash commands,
   hooks, and the `devin-rescue` subagent are wired automatically.
-- **Codex CLI / Codex IDE**: install both portable skills with
-  `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s '*' -y`.
+- **Codex CLI / Codex IDE**: native install —
+  `codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` then
+  `codex plugin add devin@devin-plugin-cc`. To install only the two portable
+  skills instead: `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s devin -s fusion -y`.
   Omit `-g` for project scope. Codex loads skills at session start; the skill bodies teach it
   the commands and Fusion workflow.
   (Codex `~/.codex/prompts/` custom prompts are deprecated — use the skill.)

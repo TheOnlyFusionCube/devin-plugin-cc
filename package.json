@@ -1,7 +1,7 @@
 {
   "name": "devin-plugin-cc",
   "version": "1.0.1",
-  "description": "Claude Code plugin for Devin: AI code reviews, delegated coding tasks, and cloud handoffs to app.devin.ai from slash commands.",
+  "description": "Devin plugin for Claude Code and Codex: AI code reviews, delegated coding tasks, Fusion sidekick workflows, and cloud handoffs to app.devin.ai.",
   "type": "module",
   "engines": {
     "node": ">=18.18"
@@ -12,8 +12,16 @@
     "test": "node --test"
   },
   "bin": {
-    "devin-companion": "./plugins/devin/scripts/devin-companion.mjs"
+    "devin-plugin-cc": "./plugins/devin/scripts/devin-companion.mjs"
   },
+  "files": [
+    "plugins/",
+    "skills/",
+    "scripts/",
+    "AGENTS.md",
+    "llms.txt",
+    "NOTICE"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/TheOnlyFusionCube/devin-plugin-cc.git"

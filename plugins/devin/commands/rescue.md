@@ -1,6 +1,6 @@
 ---
 description: Delegate investigation, an explicit fix request, or follow-up rescue work to the Devin rescue subagent
-argument-hint: "[--background|--wait] [--resume|--resume-id <id>|--fresh] [--model <model>] [--permission-mode <mode>] [what Devin should investigate, solve, or continue]"
+argument-hint: "[--background|--wait] [--read-only] [--resume|--resume-id <id>|--fresh] [--model <model>] [--permission-mode <mode>] [what Devin should investigate, solve, or continue]"
 allowed-tools: Bash(node:*), AskUserQuestion, Agent
 ---
 

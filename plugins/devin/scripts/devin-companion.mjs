@@ -18,6 +18,7 @@ import {
 import {
   buildDevinPrintArgs,
   DEFAULT_MODEL,
+  DEVIN_BINARY,
   devinFailureMessage,
   findLatestDevinSession,
   findTaskResumeCandidate,
@@ -144,11 +145,11 @@ async function cmdSetup(cwd, argv) {
     setConfig(cwd, "stopReviewGate", false);
   }
 
-  const binaryProbe = binaryAvailable("devin", ["version"], { cwd });
+  const binaryProbe = binaryAvailable(DEVIN_BINARY, ["version"], { cwd });
   const auth = binaryProbe.available ? getDevinAuthStatus(cwd) : { authenticated: false, detail: "devin not installed" };
   const cloud = getCloudConfig();
   const gitProbe = binaryAvailable("git", ["--version"], { cwd });
-  const nodeMajor = Number(process.versions.node.split(".")[0]);
+  const [nodeMajor, nodeMinor] = process.versions.node.split(".").map(Number);
   const config = getConfig(cwd);
 
   const report = {
@@ -161,7 +162,7 @@ async function cmdSetup(cwd, argv) {
     },
     cloud: { available: cloud.available, keyKind: cloud.keyKind },
     git: { available: gitProbe.available, detail: gitProbe.detail ?? null },
-    node: { version: process.versions.node, ok: nodeMajor >= 18 },
+    node: { version: process.versions.node, ok: nodeMajor > 18 || (nodeMajor === 18 && nodeMinor >= 18) },
     config
   };
 
@@ -315,6 +316,9 @@ async function cmdTask(cwd, argv) {
   const permissionMode =
     normalizePermissionMode(options["permission-mode"]) ??
     (sandbox ? "autonomous" : options["read-only"] ? "normal" : "accept-edits");
+  if (permissionMode === "autonomous" && !sandbox) {
+    throw new Error("`--permission-mode autonomous` requires `--sandbox`.");
+  }
 
   const { job, execution } = await runDevinJob({
     cwd,

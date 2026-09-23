@@ -17,7 +17,7 @@ The project is an open-source Claude Code plugin and cross-agent integration for
 | Task delegation | Send a bounded coding task to Devin with workspace-aware state and resumable sessions. |
 | Fusion workflow | Keep Claude Opus 5.5 or GPT 6 Astra as the lead while Devin handles bounded mechanical or test-heavy work. |
 | Cloud handoff | Open a Devin session with repository, branch, context, and uncommitted diff. |
-| Agent skills | Use the same runtime from Codex, OpenCode, Cursor, Gemini CLI, Amp, Jules, and other agents. |
+| Agent skills | Use the same runtime from Codex, OpenCode, Cursor, Gemini CLI, Amp, Jules, Aider, and other agents. |
 | Review gate | Optionally review the previous Claude turn before the session ends. |
 
 Modeled after [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc), adapted to Devin's interfaces:
@@ -72,16 +72,23 @@ to verify the Devin binary, auth, and cloud credentials.
 
 The runtime is a plain Node CLI — every agent can drive it; only the command wrappers are Claude-specific. Two standard entry points ship in this repo:
 
-- **[AGENTS.md](AGENTS.md)** — read natively by Codex CLI, OpenCode, Cursor, Gemini CLI, Amp, and Jules. It documents the full `devin-companion.mjs` command surface.
+- **[AGENTS.md](AGENTS.md)** — read natively by Codex CLI, OpenCode, Cursor, Gemini CLI, Amp, Jules, and Aider. It documents the full `devin-companion.mjs` command surface.
 - **[skills/devin/](skills/devin/SKILL.md)** and **[skills/fusion/](skills/fusion/SKILL.md)** — portable [agent skills](https://agentskills.io). Copy both to `~/.codex/skills/`, `.agents/skills/` in your project, or your tool's skills dir.
 
-Install both skills globally for Codex with one command:
+Codex has a native plugin install that uses the same marketplace manifest:
 
 ```bash
-npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s '*' -y
+codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc
+codex plugin add devin@devin-plugin-cc
 ```
 
-Omit `-g` for project scope. Then use `/fusion <task>` or the Devin skill commands.
+To install only the two portable skills instead of the whole plugin:
+
+```bash
+npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s devin -s fusion -y
+```
+
+Omit `-g` for project scope. Then invoke Fusion with `$fusion <task>` (or pick it in `/skills`) and use the Devin skill commands.
 
 ## Commands
 
@@ -103,11 +110,11 @@ The default model is pinned to **`swe-2-max`** (SWE-2 Max); pass `--model <id>` 
 
 ### Fusion
 
-Fusion keeps the frontier model responsible for intent, planning, ambiguity, and final review while Devin handles bounded mechanical or test-heavy work in its own context. Cognition describes this sidekick pattern as two parallel agents with dynamic handoffs as the task evolves. See [Devin Fusion](https://cognition.com/blog/devin-fusion).
+Fusion keeps the frontier model responsible for intent, planning, ambiguity, and final review while Devin handles bounded mechanical or test-heavy work in its own context. Cognition describes this sidekick pattern as two parallel agents with dynamic handoffs as the task evolves. See [Devin Fusion](https://cognition.com/blog/devin-fusion). This repo reimplements that pattern as prompts — the lead is your Claude or Codex session, not a separate Devin Fusion harness.
 
 In Claude Code, run `/devin:fusion <task>`. The installed plugin command is namespace-scoped, so Claude exposes it as `/devin:fusion`; Claude Opus 5.5 is the lead model named by the command. Devin remains the sidekick and uses the existing `swe-2-max` default unless you override it.
 
-In Codex, install the portable `skills/fusion/` skill and run `/fusion <task>`. GPT 6 Astra is the lead model named by that skill, with Devin as the sidekick.
+In Codex, install the `skills/fusion/` skill (via `codex plugin add` or the `npx skills` command above) and invoke `$fusion <task>` — Codex skills use `$`, not `/`. GPT 6 Astra is the lead model named by that skill, with Devin as the sidekick.
 
 ## Hooks
 
@@ -123,9 +130,12 @@ Per-workspace state lives outside the repo under the OS temp dir (`<tmp>/devin-c
 
 ```text
 AGENTS.md                         # cross-agent instructions (Codex, OpenCode, Cursor, …)
+llms.txt                          # agent-readable summary + doc map
 skills/devin/SKILL.md             # portable Devin runtime skill
 skills/fusion/SKILL.md            # portable Fusion lead/sidekick skill
-.claude-plugin/marketplace.json   # marketplace manifest
+.claude-plugin/marketplace.json   # marketplace manifest (Claude Code and Codex)
+.github/workflows/ci.yml          # CI: install check, tests, doctor
+scripts/install.mjs               # npm prepare hook — required-file sanity check
 plugins/devin/
   .claude-plugin/plugin.json      # plugin manifest
   commands/*.md                   # /devin:* slash commands
@@ -159,7 +169,7 @@ No. Local review and task commands use an installed and authenticated Devin CLI.
 ## Development
 
 ```bash
-npm test          # node --test — 22 tests incl. a fake devin binary fixture
+npm test          # node --test — incl. a fake devin binary fixture
 node --check <file>   # syntax-check any module
 ```
 

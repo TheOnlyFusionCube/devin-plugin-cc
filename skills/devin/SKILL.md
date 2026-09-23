@@ -27,9 +27,10 @@ positional is passed to Devin verbatim.
 - `status [job-id] [--wait] [--json]` — list/inspect jobs.
 - `result [job-id] [--json]` — print a finished job's full output.
 - `cancel <job-id>` — stop a running job or cloud session.
-- `/fusion <task>` — use GPT 6 Astra as the lead and Devin as the sidekick for bounded mechanical or test-heavy work. The portable Fusion skill lives in `skills/fusion/`.
 
 All commands accept `--json` for machine-readable output.
+
+The Fusion workflow is a separate prompt-level skill, not a companion command. In Codex, invoke `$fusion <task>` (or pick Fusion in `/skills`) to use GPT 6 Astra as the lead and Devin as the sidekick for bounded mechanical or test-heavy work. The portable Fusion skill lives in `skills/fusion/`.
 
 ## Rules
 

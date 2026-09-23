@@ -24,15 +24,15 @@ npm install
 npm run doctor
 ```
 
-Claude Code uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`, or the shell equivalents `claude plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` and `claude plugin install devin@devin-plugin-cc`. Codex installs both skills with `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s '*' -y`.
+Claude Code uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`, or the shell equivalents `claude plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` and `claude plugin install devin@devin-plugin-cc`. Codex installs natively with `codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` then `codex plugin add devin@devin-plugin-cc`, or just the two portable skills with `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s devin -s fusion -y`.
 
 ## Capabilities
 
 - AI code review and adversarial review.
 - Delegated local Devin tasks with resume, status, result, and cancel controls.
 - Cloud Devin handoffs through `DEVIN_API_KEY`.
-- Claude Code `/devin:fusion` and Codex `/fusion` lead/sidekick workflows.
+- Claude Code `/devin:fusion` and Codex `$fusion` lead/sidekick workflows.
 
 ## Compatibility
 
-Node.js 18.18 or newer. Git required for review context and cloud handoffs. Local commands require an authenticated Devin CLI; cloud handoffs additionally require `DEVIN_API_KEY`.
+Node.js 18.18 or newer. Git provides review context and handoff diffs (both degrade gracefully without it). Local commands require an authenticated Devin CLI; cloud handoffs require `DEVIN_API_KEY` instead of the CLI.
