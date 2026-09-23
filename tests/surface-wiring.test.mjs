@@ -31,3 +31,21 @@ test("Fusion surfaces preserve each host's lead model and shared sidekick", () =
   assert.match(codex, /devin-companion\.mjs task --write/);
   assert.match(codex, /swe-2-max/);
 });
+
+test("SEO surfaces describe the shipped cross-agent capabilities", () => {
+  const packageJson = JSON.parse(read("package.json"));
+  const marketplace = JSON.parse(read(".claude-plugin/marketplace.json"));
+  const plugin = JSON.parse(read("plugins/devin/.claude-plugin/plugin.json"));
+  const readme = read("README.md");
+  const llms = read("llms.txt");
+
+  for (const keyword of ["codex", "codex-cli", "agent-skills", "fusion", "developer-tools"]) {
+    assert.ok(packageJson.keywords.includes(keyword), `missing npm keyword: ${keyword}`);
+  }
+  assert.match(readme, /^# Devin Plugin for Claude Code and Codex/m);
+  assert.match(readme, /Frequently asked questions/);
+  assert.match(llms, /Claude Code and Codex/);
+  assert.match(llms, /skills\/fusion\/SKILL\.md/);
+  assert.match(marketplace.metadata.description, /Claude Code and Codex/);
+  assert.match(plugin.description, /Fusion sidekick workflows/);
+});

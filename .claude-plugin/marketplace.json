@@ -4,13 +4,13 @@
     "name": "devin-plugin-cc contributors"
   },
   "metadata": {
-    "description": "Devin plugins for Claude Code: AI code review, task delegation, and cloud handoffs.",
+    "description": "Devin plugin for Claude Code and Codex: AI code review, task delegation, Fusion sidekick workflows, and cloud handoffs.",
     "version": "1.0.1"
   },
   "plugins": [
     {
       "name": "devin",
-      "description": "Devin in Claude Code: read-only AI code reviews, adversarial reviews, delegated coding tasks, and cloud handoffs to app.devin.ai sessions.",
+      "description": "Devin in Claude Code and Codex: AI code reviews, adversarial reviews, delegated coding tasks, Fusion sidekick workflows, and cloud handoffs.",
       "version": "1.0.1",
       "author": {
         "name": "devin-plugin-cc contributors"
