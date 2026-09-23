@@ -54,9 +54,10 @@ Fusion surfaces are agent prompts, not a second runtime command. Claude Code use
 
 - **Claude Code**: install as a plugin (see README). Slash commands,
   hooks, and the `devin-rescue` subagent are wired automatically.
-- **Codex CLI / Codex IDE**: copy `skills/devin/` and `skills/fusion/` from this repo into
-  `~/.codex/skills/` (or `.agents/skills/` in the target project).
-  Codex loads skills at session start; the skill bodies teach it the commands and Fusion workflow.
+- **Codex CLI / Codex IDE**: install both portable skills with
+  `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s '*' -y`.
+  Omit `-g` for project scope. Codex loads skills at session start; the skill bodies teach it
+  the commands and Fusion workflow.
   (Codex `~/.codex/prompts/` custom prompts are deprecated — use the skill.)
 - **OpenCode / Cursor / Gemini CLI / Amp / Jules**: these agents read
   `AGENTS.md` natively — point them at this file, or drop the skill dir into

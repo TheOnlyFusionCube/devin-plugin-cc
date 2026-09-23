@@ -44,11 +44,18 @@ npm install
 npm run doctor
 ```
 
-Then add the local marketplace and install the plugin:
+Inside Claude Code, add the local marketplace and install the plugin:
 
 ```text
 /plugin marketplace add .
 /plugin install devin@devin-plugin-cc
+```
+
+The equivalent shell commands use the GitHub marketplace directly:
+
+```bash
+claude plugin marketplace add TheOnlyFusionCube/devin-plugin-cc
+claude plugin install devin@devin-plugin-cc
 ```
 
 Or point Claude Code at this repo with `--plugin-dir`.
@@ -67,6 +74,14 @@ The runtime is a plain Node CLI — every agent can drive it; only the command w
 
 - **[AGENTS.md](AGENTS.md)** — read natively by Codex CLI, OpenCode, Cursor, Gemini CLI, Amp, and Jules. It documents the full `devin-companion.mjs` command surface.
 - **[skills/devin/](skills/devin/SKILL.md)** and **[skills/fusion/](skills/fusion/SKILL.md)** — portable [agent skills](https://agentskills.io). Copy both to `~/.codex/skills/`, `.agents/skills/` in your project, or your tool's skills dir.
+
+Install both skills globally for Codex with one command:
+
+```bash
+npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s '*' -y
+```
+
+Omit `-g` for project scope. Then use `/fusion <task>` or the Devin skill commands.
 
 ## Commands
 

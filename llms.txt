@@ -24,7 +24,7 @@ npm install
 npm run doctor
 ```
 
-Claude Code then uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`. Codex loads `skills/devin/` and `skills/fusion/`.
+Claude Code uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`, or the shell equivalents `claude plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` and `claude plugin install devin@devin-plugin-cc`. Codex installs both skills with `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s '*' -y`.
 
 ## Capabilities
 
