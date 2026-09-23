@@ -30,9 +30,15 @@
     "ai-code-review",
     "coding-agent",
     "ai-agents",
+    "ai-coding-assistant",
     "slash-commands",
+    "codex",
+    "codex-cli",
     "cognition",
     "anthropic",
+    "agent-skills",
+    "fusion",
+    "developer-tools",
     "plugin"
   ],
   "license": "Apache-2.0"

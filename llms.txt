@@ -1,0 +1,38 @@
+# Devin Plugin for Claude Code and Codex
+
+> Open-source Claude Code plugin and portable agent integration for Devin AI code review, task delegation, cloud handoffs, and Fusion sidekick workflows.
+
+## Summary
+
+`devin-plugin-cc` connects Claude Code, Codex, and other coding agents to the local Devin CLI and Devin API. It provides read-only reviews, adversarial reviews, delegated coding tasks, resumable job control, cloud handoffs, and a Fusion workflow where a frontier model leads while Devin handles bounded mechanical work.
+
+## Primary documentation
+
+- [README](README.md): installation, capabilities, commands, Fusion, FAQ, and development.
+- [AGENTS.md](AGENTS.md): universal CLI contract and cross-agent integration guidance.
+- [Devin skill](skills/devin/SKILL.md): portable runtime commands for Codex and other agents.
+- [Fusion skill](skills/fusion/SKILL.md): GPT 6 Astra lead and Devin sidekick workflow for Codex.
+- [Claude Fusion command](plugins/devin/commands/fusion.md): Claude Opus 5.5 lead and Devin sidekick workflow.
+- [Companion CLI](plugins/devin/scripts/devin-companion.mjs): shared runtime dispatcher.
+
+## Installation
+
+```bash
+git clone https://github.com/TheOnlyFusionCube/devin-plugin-cc
+cd devin-plugin-cc
+npm install
+npm run doctor
+```
+
+Claude Code then uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`. Codex loads `skills/devin/` and `skills/fusion/`.
+
+## Capabilities
+
+- AI code review and adversarial review.
+- Delegated local Devin tasks with resume, status, result, and cancel controls.
+- Cloud Devin handoffs through `DEVIN_API_KEY`.
+- Claude Code `/devin:fusion` and Codex `/fusion` lead/sidekick workflows.
+
+## Compatibility
+
+Node.js 18.18 or newer. Git required for review context and cloud handoffs. Local commands require an authenticated Devin CLI; cloud handoffs additionally require `DEVIN_API_KEY`.

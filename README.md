@@ -1,12 +1,24 @@
-# devin-plugin-cc — Devin plugin for Claude Code
+# Devin Plugin for Claude Code and Codex
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
 [![Devin CLI](https://img.shields.io/badge/Devin-CLI%20%2B%20API-00c7b7)](https://docs.devin.ai/cli)
 
-**A Claude Code plugin that puts [Devin](https://devin.ai) inside your terminal workflow**: AI code reviews, delegated coding tasks, and cloud handoffs to Devin's autonomous sessions — all from slash commands like `/devin:review` and `/devin:handoff`. Powered by the local [Devin CLI](https://docs.devin.ai/cli) (`devin -p` one-shot mode) and the Devin API.
+**Devin Plugin for Claude Code and Codex** brings [Devin](https://devin.ai) into a terminal coding workflow for AI code review, delegated coding tasks, cloud handoffs, and Fusion sidekick sessions. Claude Code uses slash commands such as `/devin:review` and `/devin:fusion`; Codex and other agents use the portable skills and the shared Devin CLI runtime.
 
-What you get: read-only AI code reviews of your working tree or branch diff, adversarial review for design tradeoffs, a thin `devin-rescue` subagent that hands implementation work to Devin, cloud handoffs that carry your repo + branch + uncommitted diff into an app.devin.ai session, background job control (`status`/`result`/`cancel`), and an optional stop-time review gate that blocks session end on a `BLOCK` verdict.
+The project is an open-source Claude Code plugin and cross-agent integration for Devin AI. It uses the local [Devin CLI](https://docs.devin.ai/cli) for one-shot work and the Devin API for cloud handoffs.
+
+## What it does
+
+| Capability | Description |
+| --- | --- |
+| AI code review | Review a working tree or branch diff with read-only Devin analysis. |
+| Adversarial review | Examine implementation choices, assumptions, tradeoffs, and failure modes. |
+| Task delegation | Send a bounded coding task to Devin with workspace-aware state and resumable sessions. |
+| Fusion workflow | Keep Claude Opus 5.5 or GPT 6 Astra as the lead while Devin handles bounded mechanical or test-heavy work. |
+| Cloud handoff | Open a Devin session with repository, branch, context, and uncommitted diff. |
+| Agent skills | Use the same runtime from Codex, OpenCode, Cursor, Gemini CLI, Amp, Jules, and other agents. |
+| Review gate | Optionally review the previous Claude turn before the session ends. |
 
 Modeled after [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc), adapted to Devin's interfaces:
 
@@ -96,7 +108,8 @@ Per-workspace state lives outside the repo under the OS temp dir (`<tmp>/devin-c
 
 ```text
 AGENTS.md                         # cross-agent instructions (Codex, OpenCode, Cursor, …)
-skills/devin/SKILL.md             # portable agent skill (agentskills.io format)
+skills/devin/SKILL.md             # portable Devin runtime skill
+skills/fusion/SKILL.md            # portable Fusion lead/sidekick skill
 .claude-plugin/marketplace.json   # marketplace manifest
 plugins/devin/
   .claude-plugin/plugin.json      # plugin manifest
@@ -109,6 +122,24 @@ plugins/devin/
   skills/*/SKILL.md               # runtime, result-handling, prompting docs
 tests/                            # node:test suite + fake devin fixture
 ```
+
+## Frequently asked questions
+
+### What is devin-plugin-cc?
+
+`devin-plugin-cc` is a Claude Code plugin and portable agent integration that adds Devin AI code review, task delegation, cloud handoffs, and Fusion workflows to a repository-based coding workflow.
+
+### Does it work with Claude Code and Codex?
+
+Yes. Claude Code installs the `devin` marketplace plugin and exposes commands such as `/devin:review`, `/devin:rescue`, and `/devin:fusion`. Codex loads `skills/devin/` and `skills/fusion/`, then calls the same `devin-companion.mjs` runtime.
+
+### What is Fusion mode?
+
+Fusion keeps a frontier model as the lead for intent, planning, ambiguity, architecture, and final review. Devin acts as a sidekick for bounded mechanical, repetitive, or test-heavy work with its own task context.
+
+### Does local use require a Devin API key?
+
+No. Local review and task commands use an installed and authenticated Devin CLI. Only cloud handoffs require `DEVIN_API_KEY`.
 
 ## Development
 
