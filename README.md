@@ -23,11 +23,20 @@ Modeled after [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-
 
 ## Install
 
-Add the marketplace and install the plugin:
+Clone and validate the repository first:
+
+```bash
+git clone https://github.com/TheOnlyFusionCube/devin-plugin-cc
+cd devin-plugin-cc
+npm install
+npm run doctor
+```
+
+Then add the local marketplace and install the plugin:
 
 ```text
-/plugin marketplace add <path-or-url-to-this-repo>
-/plugin install devin@<marketplace-name>
+/plugin marketplace add .
+/plugin install devin@devin-plugin-cc
 ```
 
 Or point Claude Code at this repo with `--plugin-dir`.
@@ -45,7 +54,7 @@ to verify the Devin binary, auth, and cloud credentials.
 The runtime is a plain Node CLI — every agent can drive it; only the command wrappers are Claude-specific. Two standard entry points ship in this repo:
 
 - **[AGENTS.md](AGENTS.md)** — read natively by Codex CLI, OpenCode, Cursor, Gemini CLI, Amp, and Jules. It documents the full `devin-companion.mjs` command surface.
-- **[skills/devin/](skills/devin/SKILL.md)** — a portable [agent skill](https://agentskills.io). Copy it to `~/.codex/skills/devin/`, `.agents/skills/devin/` in your project, or your tool's skills dir.
+- **[skills/devin/](skills/devin/SKILL.md)** and **[skills/fusion/](skills/fusion/SKILL.md)** — portable [agent skills](https://agentskills.io). Copy both to `~/.codex/skills/`, `.agents/skills/` in your project, or your tool's skills dir.
 
 ## Commands
 
@@ -55,6 +64,7 @@ The runtime is a plain Node CLI — every agent can drive it; only the command w
 | `/devin:review [focus]` | Read-only review of the working tree, or `--base <ref>` for a branch diff. `--background` runs async, `--wait` polls to completion. |
 | `/devin:adversarial-review [focus]` | Read-only review focused on implementation choices, tradeoffs, assumptions, and failure modes. Same flags as `review`. |
 | `/devin:rescue <task>` | Delegate diagnosis/implementation to Devin via the `devin-rescue` subagent. Write-capable by default; `--read-only`/`--background`/`--resume` supported. |
+| `/devin:fusion <task>` | Run a frontier-lead workflow with Claude Opus 5.5 as lead and Devin as the sidekick for bounded mechanical work. |
 | `/devin:handoff <task>` | Create a cloud Devin session carrying repo, branch, context, and a bounded uncommitted diff. `--wait` polls until terminal. |
 | `/devin:status [job-id]` | List local jobs and cloud handoffs, with live phase/elapsed info. |
 | `/devin:result [job-id]` | Show the complete stored output of a finished job. |
@@ -63,6 +73,14 @@ The runtime is a plain Node CLI — every agent can drive it; only the command w
 Review commands are strictly read-only: they never apply fixes. Arguments are parsed POSIX-style — flags first, then free text passed through verbatim.
 
 The default model is pinned to **`swe-2-max`** (SWE-2 Max); pass `--model <id>` to any review/task command to override — `devin models list` shows what your account can use.
+
+### Fusion
+
+Fusion keeps the frontier model responsible for intent, planning, ambiguity, and final review while Devin handles bounded mechanical or test-heavy work in its own context. Cognition describes this sidekick pattern as two parallel agents with dynamic handoffs as the task evolves. See [Devin Fusion](https://cognition.com/blog/devin-fusion).
+
+In Claude Code, run `/devin:fusion <task>`. The installed plugin command is namespace-scoped, so Claude exposes it as `/devin:fusion`; Claude Opus 5.5 is the lead model named by the command. Devin remains the sidekick and uses the existing `swe-2-max` default unless you override it.
+
+In Codex, install the portable `skills/fusion/` skill and run `/fusion <task>`. GPT 6 Astra is the lead model named by that skill, with Devin as the sidekick.
 
 ## Hooks
 
