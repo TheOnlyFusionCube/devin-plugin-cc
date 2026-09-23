@@ -35,6 +35,8 @@ passed through verbatim as prompt text.
 
 Every command accepts `--json` for machine-readable output.
 
+Fusion surfaces are agent prompts, not a second runtime command. Claude Code uses `/devin:fusion` with Claude Opus 5.5 as the frontier lead. Codex uses `/fusion` from `skills/fusion/` with GPT 6 Astra as the frontier lead. Both reuse `task` for Devin's sidekick work, whose default model remains `swe-2-max`.
+
 ## Defaults and safety
 
 - **Model**: pinned to `swe-2-max` (SWE-2 Max). Override per call with
@@ -52,9 +54,9 @@ Every command accepts `--json` for machine-readable output.
 
 - **Claude Code**: install as a plugin (see README). Slash commands,
   hooks, and the `devin-rescue` subagent are wired automatically.
-- **Codex CLI / Codex IDE**: copy `skills/devin/` from this repo into
-  `~/.codex/skills/devin/` (or `.agents/skills/devin/` in the target project).
-  Codex loads skills at session start; the skill body teaches it the commands.
+- **Codex CLI / Codex IDE**: copy `skills/devin/` and `skills/fusion/` from this repo into
+  `~/.codex/skills/` (or `.agents/skills/` in the target project).
+  Codex loads skills at session start; the skill bodies teach it the commands and Fusion workflow.
   (Codex `~/.codex/prompts/` custom prompts are deprecated — use the skill.)
 - **OpenCode / Cursor / Gemini CLI / Amp / Jules**: these agents read
   `AGENTS.md` natively — point them at this file, or drop the skill dir into

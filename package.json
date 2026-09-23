@@ -1,13 +1,18 @@
 {
   "name": "devin-plugin-cc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Claude Code plugin for Devin: AI code reviews, delegated coding tasks, and cloud handoffs to app.devin.ai from slash commands.",
   "type": "module",
   "engines": {
     "node": ">=18.18"
   },
   "scripts": {
+    "prepare": "node scripts/install.mjs",
+    "doctor": "node plugins/devin/scripts/devin-companion.mjs setup",
     "test": "node --test"
+  },
+  "bin": {
+    "devin-companion": "./plugins/devin/scripts/devin-companion.mjs"
   },
   "repository": {
     "type": "git",
