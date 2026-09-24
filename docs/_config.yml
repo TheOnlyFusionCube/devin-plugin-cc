@@ -1,0 +1,11 @@
+title: Devin Plugin for Claude Code and Codex
+description: >-
+  Open-source plugin that brings Devin AI code review, task delegation,
+  Fusion sidekick workflows, and cloud handoffs into Claude Code, Codex,
+  and other coding agents.
+url: https://theonlyfusioncube.github.io
+baseurl: /devin-plugin-cc
+theme: jekyll-theme-minimal
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
