@@ -24,7 +24,7 @@ npm install
 npm run doctor
 ```
 
-Claude Code uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`, or the shell equivalents `claude plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` and `claude plugin install devin@devin-plugin-cc`. Codex installs natively with `codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` then `codex plugin add devin@devin-plugin-cc`, or just the two portable skills with `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s devin -s fusion -y`.
+Claude Code uses `/plugin marketplace add .` and `/plugin install devin@devin-plugin-cc`, or the shell equivalents `claude plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` and `claude plugin install devin@devin-plugin-cc`. Codex installs natively with `codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc` then `codex plugin add devin@devin-plugin-cc`, or just the two portable skills with `npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s devin -s fusion -y`. The Devin CLI installs it with `devin plugins install TheOnlyFusionCube/devin-plugin-cc#plugins/devin`.
 
 ## Capabilities
 

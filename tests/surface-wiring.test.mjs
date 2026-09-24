@@ -67,6 +67,9 @@ test("documented capabilities match shipped surfaces and referenced files exist"
   assert.match(readme, /-s devin -s fusion/);
   assert.doesNotMatch(readme, /-s '\*'/);
 
+  // The Devin CLI install path uses the plugin subdir of the marketplace repo.
+  assert.match(readme, /devin plugins install TheOnlyFusionCube\/devin-plugin-cc#plugins\/devin/);
+
   // README links to the machine-readable entry point and the CI workflow.
   assert.match(readme, /\[llms\.txt\]\(llms\.txt\)/);
   assert.match(readme, /actions\/workflows\/ci\.yml\/badge\.svg/);

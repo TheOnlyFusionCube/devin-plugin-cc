@@ -92,6 +92,12 @@ npx skills add TheOnlyFusionCube/devin-plugin-cc -a codex -g -s devin -s fusion 
 
 Omit `-g` for project scope. Then invoke Fusion with `$fusion <task>` (or pick it in `/skills`) and use the Devin skill commands.
 
+The Devin CLI reads the same marketplace manifest — this installs the plugin for Devin's own sessions:
+
+```bash
+devin plugins install TheOnlyFusionCube/devin-plugin-cc#plugins/devin
+```
+
 ## Commands
 
 | Command | What it does |
