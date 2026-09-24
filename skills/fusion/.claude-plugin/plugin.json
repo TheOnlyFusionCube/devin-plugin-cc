@@ -1,0 +1,9 @@
+{
+  "name": "fusion",
+  "version": "1.0.1",
+  "description": "Fusion lead/sidekick workflow: a frontier model leads while Devin handles bounded mechanical or test-heavy work.",
+  "author": {
+    "name": "devin-plugin-cc contributors"
+  },
+  "homepage": "https://github.com/TheOnlyFusionCube/devin-plugin-cc"
+}

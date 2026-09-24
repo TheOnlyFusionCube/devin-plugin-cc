@@ -11,6 +11,11 @@ const files = [
   "package.json",
   ".claude-plugin/marketplace.json",
   "plugins/devin/.claude-plugin/plugin.json",
+  "plugins/devin/.codex-plugin/plugin.json",
+  "skills/fusion/.claude-plugin/plugin.json",
+  "skills/fusion/.codex-plugin/plugin.json",
+  "skills/devin/.claude-plugin/plugin.json",
+  "skills/devin/.codex-plugin/plugin.json",
   "plugins/devin/scripts/devin-companion.mjs"
 ];
 

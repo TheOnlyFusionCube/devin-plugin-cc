@@ -16,6 +16,24 @@
         "name": "devin-plugin-cc contributors"
       },
       "source": "./plugins/devin"
+    },
+    {
+      "name": "fusion",
+      "description": "Fusion lead/sidekick workflow: a frontier model leads while Devin handles bounded mechanical or test-heavy work.",
+      "version": "1.0.1",
+      "author": {
+        "name": "devin-plugin-cc contributors"
+      },
+      "source": "./skills/fusion"
+    },
+    {
+      "name": "devin-skills",
+      "description": "Portable Devin runtime skill for the shared devin-companion.mjs CLI.",
+      "version": "1.0.1",
+      "author": {
+        "name": "devin-plugin-cc contributors"
+      },
+      "source": "./skills/devin"
     }
   ]
 }

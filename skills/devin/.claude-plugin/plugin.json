@@ -1,0 +1,9 @@
+{
+  "name": "devin-skills",
+  "version": "1.0.1",
+  "description": "Portable Devin runtime skill: drive reviews, delegated tasks, job control, and cloud handoffs through the shared devin-companion.mjs CLI.",
+  "author": {
+    "name": "devin-plugin-cc contributors"
+  },
+  "homepage": "https://github.com/TheOnlyFusionCube/devin-plugin-cc"
+}

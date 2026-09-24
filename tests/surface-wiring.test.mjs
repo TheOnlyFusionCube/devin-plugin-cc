@@ -25,12 +25,25 @@ test("package install surface is wired", () => {
 test("version is consistent across all manifests", () => {
   const packageJson = JSON.parse(read("package.json"));
   const marketplace = JSON.parse(read(".claude-plugin/marketplace.json"));
-  const plugin = JSON.parse(read("plugins/devin/.claude-plugin/plugin.json"));
+  const pluginManifests = [
+    "plugins/devin/.claude-plugin/plugin.json",
+    "plugins/devin/.codex-plugin/plugin.json",
+    "skills/fusion/.claude-plugin/plugin.json",
+    "skills/fusion/.codex-plugin/plugin.json",
+    "skills/devin/.claude-plugin/plugin.json",
+    "skills/devin/.codex-plugin/plugin.json",
+  ];
 
   assert.equal(marketplace.metadata.version, packageJson.version);
-  assert.equal(plugin.version, packageJson.version);
   for (const entry of marketplace.plugins) {
     assert.equal(entry.version, packageJson.version);
+    assert.ok(exists(entry.source), `marketplace source missing: ${entry.source}`);
+    const manifest = JSON.parse(read(`${entry.source}/.claude-plugin/plugin.json`));
+    assert.equal(manifest.version, packageJson.version, `${entry.name} manifest version`);
+    assert.equal(manifest.name, entry.name, `${entry.name} manifest name`);
+  }
+  for (const manifestPath of pluginManifests) {
+    assert.equal(JSON.parse(read(manifestPath)).version, packageJson.version, manifestPath);
   }
 });
 

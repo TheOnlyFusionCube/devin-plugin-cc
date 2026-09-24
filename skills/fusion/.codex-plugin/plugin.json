@@ -1,0 +1,13 @@
+{
+  "name": "fusion",
+  "version": "1.0.1",
+  "description": "Fusion lead/sidekick workflow: a frontier model (GPT 6 Astra in Codex, Claude Opus 5.5 in Claude Code) leads while Devin handles bounded mechanical or test-heavy work.",
+  "author": {
+    "name": "devin-plugin-cc contributors"
+  },
+  "homepage": "https://github.com/TheOnlyFusionCube/devin-plugin-cc",
+  "repository": "https://github.com/TheOnlyFusionCube/devin-plugin-cc",
+  "license": "Apache-2.0",
+  "keywords": ["devin", "fusion", "codex", "codex-cli", "agent-skills", "multi-agent"],
+  "skills": "./"
+}

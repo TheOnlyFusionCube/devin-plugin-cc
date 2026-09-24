@@ -81,7 +81,9 @@ Codex has a native plugin install that uses the same marketplace manifest:
 
 ```bash
 codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc
-codex plugin add devin@devin-plugin-cc
+codex plugin add devin@devin-plugin-cc          # main plugin
+codex plugin add fusion@devin-plugin-cc        # Fusion skill ($fusion)
+codex plugin add devin-skills@devin-plugin-cc  # portable runtime skill
 ```
 
 To install only the two portable skills instead of the whole plugin:
@@ -122,7 +124,7 @@ Fusion keeps the frontier model responsible for intent, planning, ambiguity, and
 
 In Claude Code, run `/devin:fusion <task>`. The installed plugin command is namespace-scoped, so Claude exposes it as `/devin:fusion`; Claude Opus 5.5 is the lead model named by the command. Devin remains the sidekick and uses the existing `swe-2-max` default unless you override it.
 
-In Codex, install the `skills/fusion/` skill (via `codex plugin add` or the `npx skills` command above) and invoke `$fusion <task>` — Codex skills use `$`, not `/`. GPT 6 Astra is the lead model named by that skill, with Devin as the sidekick.
+In Codex, install the fusion skill (via `codex plugin add fusion@devin-plugin-cc` or the `npx skills` command above) and invoke `$fusion <task>` — Codex skills use `$`, not `/`. GPT 6 Astra is the lead model named by that skill, with Devin as the sidekick.
 
 ## Hooks
 

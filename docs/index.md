@@ -57,6 +57,7 @@ Codex:
 ```bash
 codex plugin marketplace add TheOnlyFusionCube/devin-plugin-cc
 codex plugin add devin@devin-plugin-cc
+codex plugin add fusion@devin-plugin-cc
 ```
 
 Devin CLI:
