@@ -12,7 +12,7 @@
     "test": "node --test"
   },
   "bin": {
-    "devin-plugin-cc": "./plugins/devin/scripts/devin-companion.mjs"
+    "devin-plugin-cc": "./plugins/devin/scripts/devin-plugin-cc.mjs"
   },
   "files": [
     "plugins/",
