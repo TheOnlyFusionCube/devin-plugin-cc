@@ -13,6 +13,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/devin-companion.mjs" setup --json $ARGUMENTS
 If the result says Devin is unavailable:
 - Do not offer to install it yourself.
 - Point the user at the install instructions: `brew install cognition/tap/devin` or https://docs.devin.ai/cli
+- On macOS, the CLI bundled with Devin Desktop is detected automatically, so installing Devin Desktop also works.
 - After they install, they can re-run `/devin:setup`.
 
 If Devin is installed but not authenticated:

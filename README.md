@@ -30,7 +30,7 @@ Modeled after [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-
 
 ## Requirements
 
-- [Devin CLI](https://docs.devin.ai/cli) installed and authenticated (`devin auth status`), or `DEVIN_API_KEY` set for cloud handoffs.
+- [Devin CLI](https://docs.devin.ai/cli) installed and authenticated (`devin auth status`), or `DEVIN_API_KEY` set for cloud handoffs. On macOS, the CLI bundled with Devin Desktop (`/Applications/Devin.app`) is detected automatically when `devin` is not on your `PATH`.
 - Node.js >= 18.18 (for the companion runtime).
 - Git (review commands run inside a repository).
 
@@ -184,6 +184,8 @@ node --check <file>   # syntax-check any module
 ```
 
 `DEVIN_COMPANION_DEVIN_BINARY` overrides the devin binary path (used by tests; handy for smoke tests against a stub).
+
+The devin binary is resolved once per process in this order: `DEVIN_COMPANION_DEVIN_BINARY`, then `devin` on `PATH`, then (macOS only) the Devin Desktop app bundle at `/Applications/Devin.app/Contents/Resources/app/extensions/windsurf/devin/bin/devin`. `/devin:setup` reports which one was chosen. `DEVIN_COMPANION_DESKTOP_BINARY_CANDIDATE` replaces the app-bundle path and exists for tests only.
 
 ## Credits
 
