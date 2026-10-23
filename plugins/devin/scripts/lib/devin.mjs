@@ -217,6 +217,17 @@ export function sandboxFailureHint({ platform = process.platform, stderr = "" } 
   ].join("\n");
 }
 
+// The CLI prints a welcome screen and exits 0 without running the prompt right after
+// the first `devin auth login`. ANSI bold codes may wrap some of the words.
+export function isOnboardingOutput(text) {
+  const stripped = String(text ?? "").replace(/\x1b\[[0-9;]*m/g, "");
+  return (
+    /Welcome to Devin CLI!/i.test(stripped) &&
+    /Logged in as/i.test(stripped) &&
+    /Run .*devin.* to get started/i.test(stripped)
+  );
+}
+
 export function listDevinSessions(cwd) {
   const result = runCommand(getDevinBinary(), ["list", "--format", "json"], { cwd });
   if (result.error || result.status !== 0) {
