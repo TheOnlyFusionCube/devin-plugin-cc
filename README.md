@@ -176,6 +176,10 @@ Fusion keeps a frontier model as the lead for intent, planning, ambiguity, archi
 
 No. Local review and task commands use an installed and authenticated Devin CLI. Only cloud handoffs require `DEVIN_API_KEY`.
 
+### Can I point the cloud API at another URL?
+
+No. Cloud calls send your API key as a bearer token, so `DEVIN_API_URL` is validated before any request. Unset it (the default) or set it to exactly `https://api.devin.ai`. Userinfo, paths, query strings, fragments, other ports, other hosts, and plain `http://` are rejected, and authenticated requests never follow redirects. The only exception is for tests: with `DEVIN_COMPANION_ALLOW_LOOPBACK_API=1` set, `DEVIN_API_URL` may be an `http(s)` URL on `127.0.0.1`, `[::1]`, or `localhost` (any port). `/devin:setup` reports a rejected URL.
+
 ## Development
 
 ```bash

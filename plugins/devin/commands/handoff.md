@@ -12,6 +12,7 @@ Raw slash-command arguments:
 Core constraint:
 - This command creates a cloud Devin session on Devin's infrastructure, not locally.
 - It requires `DEVIN_API_KEY` in the environment. If unset, the companion reports that and stops — tell the user to get a key at https://app.devin.ai/settings/api-keys and re-run.
+- If `DEVIN_API_URL` is set, it must be exactly `https://api.devin.ai`; any other value is rejected before a request is made, and `/devin:setup` reports it.
 - The companion automatically attaches the repo slug, current branch, and uncommitted diff as context. Warn the user if the diff may contain secrets they do not want sent to the cloud.
 - Your only job is to run the handoff and return the companion's output verbatim to the user.
 
