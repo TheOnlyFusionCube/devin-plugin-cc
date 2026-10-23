@@ -25,7 +25,8 @@ import {
   getDevinAuthStatus,
   getDevinAvailability,
   normalizePermissionMode,
-  runDevinPrint
+  runDevinPrint,
+  sandboxFailureHint
 } from "./lib/devin.mjs";
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import {
@@ -76,7 +77,6 @@ const STATUS_POLL_INTERVAL_MS = 2000;
 const HANDOFF_POLL_INTERVAL_MS = 30000;
 const MAX_INLINE_REVIEW_FILES = 20;
 const MAX_INLINE_REVIEW_DIFF_BYTES = 512 * 1024;
-const SANDBOX_FAILURE_PATTERN = /sandbox|seatbelt|bubblewrap|bwrap|seccomp/i;
 
 function printUsage() {
   console.log(
@@ -169,6 +169,27 @@ async function cmdSetup(cwd, argv) {
   outputResult(report, renderSetupReport(report), options.json);
 }
 
+function renderDevinOutput({ rawOutput, result, sandboxHint }) {
+  const base = rawOutput ? `${rawOutput}\n` : `Devin produced no output (exit ${result.exitStatus}).\n${devinFailureMessage(result)}\n`;
+  if (!sandboxHint) {
+    return base;
+  }
+  // Keep Devin's own stderr lines next to the hint even when stdout had content.
+  return `${base}${rawOutput ? `${devinFailureMessage(result)}\n` : ""}\n${sandboxHint}\n`;
+}
+
+// A sandbox failure is an error, not a normal completion: exit non-zero. With --json
+// stdout is machine output, so the hint also goes to stderr for hooks and callers.
+function reportSandboxFailure(execution, asJson) {
+  if (!execution.sandboxHint) {
+    return;
+  }
+  process.exitCode = 1;
+  if (asJson) {
+    process.stderr.write(`${execution.sandboxHint}\n`);
+  }
+}
+
 async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = null, permissionMode = null, sandbox = false, continueLast = false, resumeSessionId = null, title = null, meta = {} }) {
   const jobsDir = resolveJobsDir(cwd);
   fs.mkdirSync(jobsDir, { recursive: true });
@@ -209,29 +230,15 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
 
     progress?.(`Running devin (${permissionMode ?? "default"} mode${sandbox ? ", sandbox" : ""})…`);
     // job.pid is the devin child's pid (a process-group leader), so cancel can kill the tree.
-    let result = await runDevinPrint({
+    const result = await runDevinPrint({
       cwd,
       args,
       onSpawn: (pid) => patchJob?.({ pid }),
       onStderr: (text) => progress?.(text.trim().split("\n").slice(-1)[0])
     });
 
-    // Sandbox may be unavailable on this platform; fall back to a plain read-only-ish run.
-    if (sandbox && result.exitStatus !== 0 && SANDBOX_FAILURE_PATTERN.test(`${result.stderr}\n${result.stdout}`)) {
-      progress?.("Sandbox unavailable — retrying without it.");
-      const retryArgs = buildDevinPrintArgs({
-        promptFile,
-        model: effectiveModel,
-        permissionMode: "normal",
-        continueLast,
-        resumeSessionId
-      });
-      result = await runDevinPrint({
-        cwd,
-        args: retryArgs,
-        onSpawn: (pid) => patchJob?.({ pid })
-      });
-    }
+    // A sandboxed run that fails stays failed: never retry without the sandbox.
+    const sandboxHint = sandbox && result.exitStatus !== 0 ? sandboxFailureHint({ stderr: result.stderr }) : null;
 
     const rawOutput = result.stdout.trim();
     const devinSession = findLatestDevinSession(cwd, { createdAfterMs: startedMs - 60_000 });
@@ -242,9 +249,10 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
         stderr: result.stderr.trim() || null,
         exitStatus: result.exitStatus
       },
-      rendered: rawOutput ? `${rawOutput}\n` : `Devin produced no output (exit ${result.exitStatus}).\n${devinFailureMessage(result)}\n`,
+      rendered: renderDevinOutput({ rawOutput, result, sandboxHint }),
       summary: rawOutput.split("\n").find((line) => line.trim())?.slice(0, 140) ?? null,
-      devinSessionId: devinSession?.id ?? devinSession?.short_id ?? null
+      devinSessionId: devinSession?.id ?? devinSession?.short_id ?? null,
+      sandboxHint
     };
   }, { logFile });
 
@@ -294,6 +302,7 @@ async function cmdReview(cwd, argv, kind) {
     rendered: execution.rendered
   };
   outputResult(payload, execution.rendered, options.json);
+  reportSandboxFailure(execution, options.json);
 }
 
 async function cmdTask(cwd, argv) {
@@ -341,6 +350,7 @@ async function cmdTask(cwd, argv) {
     rendered: execution.rendered
   };
   outputResult(payload, execution.rendered, options.json);
+  reportSandboxFailure(execution, options.json);
 }
 
 async function cmdResumeCandidate(cwd, argv) {

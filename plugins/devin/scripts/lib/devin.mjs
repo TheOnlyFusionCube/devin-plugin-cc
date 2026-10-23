@@ -7,6 +7,9 @@ import { binaryAvailable, formatCommandFailure, runCommand } from "./process.mjs
 export const DEVIN_BINARY = process.env.DEVIN_COMPANION_DEVIN_BINARY ?? "devin";
 export const SESSION_ID_ENV = "DEVIN_COMPANION_SESSION_ID";
 export const DEFAULT_MODEL = "swe-2-max";
+export const SANDBOX_DOCS_URL = "https://docs.devin.ai/cli/sandbox";
+
+const SANDBOX_FAILURE_PATTERN = /sandbox|seatbelt|bubblewrap|bwrap|socat|seccomp/i;
 
 const VALID_PERMISSION_MODES = new Set([
   "normal",
@@ -110,6 +113,26 @@ export function buildDevinPrintArgs({
     args.push("--", prompt ?? "");
   }
   return args;
+}
+
+const SANDBOX_PLATFORM_HINTS = {
+  win32: "Native Windows does not support Devin's OS-level sandbox. Run the Devin CLI and this plugin inside WSL2.",
+  linux: "On Linux the sandbox needs bubblewrap (bwrap) and socat. Install them (for example `sudo apt install bubblewrap socat`) and retry.",
+  darwin: "On macOS the sandbox uses Seatbelt and needs no extra install. Check the error above, and that Devin is not already running inside another sandbox."
+};
+
+// Returns an actionable message when a failed sandboxed run looks sandbox-related,
+// otherwise null. Devin fails closed when its sandbox cannot start, and so does this
+// plugin: the caller must not retry without --sandbox.
+export function sandboxFailureHint({ platform = process.platform, stderr = "" } = {}) {
+  if (!SANDBOX_FAILURE_PATTERN.test(String(stderr ?? ""))) {
+    return null;
+  }
+  return [
+    "The sandbox could not start, so the run failed closed. It was not retried without the sandbox.",
+    SANDBOX_PLATFORM_HINTS[platform] ?? "Make sure the OS-level sandbox prerequisites for this platform are installed.",
+    `See ${SANDBOX_DOCS_URL}`
+  ].join("\n");
 }
 
 export function listDevinSessions(cwd) {
