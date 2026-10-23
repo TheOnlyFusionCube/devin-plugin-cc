@@ -114,7 +114,7 @@ devin plugins install TheOnlyFusionCube/devin-plugin-cc#plugins/devin
 | `/devin:result [job-id]` | Show the complete stored output of a finished job. |
 | `/devin:cancel <job-id>` | Kill a running local job's process tree; for cloud handoffs also asks the session to stop. |
 
-Review commands are strictly read-only: they never apply fixes. Arguments are parsed POSIX-style — flags first, then free text passed through verbatim.
+Review commands are strictly read-only: they never apply fixes. They run inside Devin's OS-level sandbox and fail closed: if the sandbox cannot start, the job fails with platform-specific guidance and is never retried without it. macOS (Seatbelt) works out of the box, Linux needs `bubblewrap` (`bwrap`) and `socat`, and native Windows is not supported (use WSL2). See the [Devin sandbox docs](https://docs.devin.ai/cli/sandbox). Arguments are parsed POSIX-style: flags first, then free text passed through verbatim.
 
 The default model is pinned to **`swe-2-max`** (SWE-2 Max); pass `--model <id>` to any review/task command to override — `devin models list` shows what your account can use.
 
@@ -130,7 +130,7 @@ In Codex, install the fusion skill (via `codex plugin add fusion@devin-plugin-cc
 
 - **SessionStart** — exports session metadata for job attribution.
 - **SessionEnd** — kills local jobs still running from this session. Detached cloud handoffs are left alone and reconciled on the next `status`/`result` call.
-- **Stop (opt-in)** — when enabled via `/devin:setup --enable-review-gate`, reviews the previous turn's diff and blocks session stop only on a `BLOCK:` verdict. Infrastructure failures fail open with a warning.
+- **Stop (opt-in)**: when enabled via `/devin:setup --enable-review-gate`, reviews the previous turn's diff and blocks session stop only on a `BLOCK:` verdict. Infrastructure failures, including an unavailable sandbox, fail open with a warning; the gate never reruns the review without the sandbox.
 
 ## State
 

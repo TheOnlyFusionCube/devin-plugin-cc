@@ -4,9 +4,11 @@ import path from "node:path";
 
 // Creates a fake `devin` executable that answers the subcommands the companion
 // uses. The marker file records each -p invocation's prompt file for assertions.
-export function createFakeDevin({ responseText = "FAKE_DEVIN_OUTPUT", exitCode = 0, failAuth = false } = {}) {
+export function createFakeDevin({ responseText = "FAKE_DEVIN_OUTPUT", exitCode = 0, failAuth = false, stderrText = "" } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fake-devin-"));
   const marker = path.join(dir, "invocations.jsonl");
+  const stderrFile = path.join(dir, "stderr.txt");
+  fs.writeFileSync(stderrFile, stderrText ? `${stderrText}\n` : "");
   const script = `#!/usr/bin/env bash
 set -euo pipefail
 marker="${marker}"
@@ -41,6 +43,7 @@ JSON
     if [ -n "$prompt_file" ] && [ -f "$prompt_file" ]; then
       cp "$prompt_file" "\${marker}.lastprompt"
     fi
+    cat "${stderrFile}" >&2
     echo "${responseText}"
     exit ${exitCode}
     ;;
@@ -61,6 +64,14 @@ esac
         return [];
       }
       return fs.readFileSync(marker, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+    },
+    // One entry per `devin -p` run, with the full argument string.
+    printRuns() {
+      const file = `${marker}.args`;
+      if (!fs.existsSync(file)) {
+        return [];
+      }
+      return fs.readFileSync(file, "utf8").trim().split("\n").filter((line) => line.startsWith("-p"));
     },
     lastPrompt() {
       return fs.existsSync(`${marker}.lastprompt`) ? fs.readFileSync(`${marker}.lastprompt`, "utf8") : null;

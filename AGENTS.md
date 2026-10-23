@@ -42,8 +42,10 @@ Fusion surfaces are agent prompts, not a second runtime command. Claude Code use
 - **Model**: pinned to `swe-2-max` (SWE-2 Max). Override per call with
   `--model <id>`; see `devin models list`.
 - **Reviews are read-only**: `review` and `adversarial-review` never modify
-  files. They run `devin -p` in `autonomous` mode with `--sandbox`, falling
-  back to `normal` mode where sandboxing is unavailable.
+  files. They run `devin -p` in `autonomous` mode with `--sandbox` and fail
+  closed: if the sandbox is unavailable (native Windows, or Linux without
+  `bwrap` and `socat`) the job is marked failed with install guidance and is
+  never retried without the sandbox.
 - **`task` is write-capable** (`accept-edits`) unless `--read-only` is passed.
   `--permission-mode dangerous`/`yolo`/`bypass` exist but should only be used
   when the caller explicitly asks for full auto-approval.
