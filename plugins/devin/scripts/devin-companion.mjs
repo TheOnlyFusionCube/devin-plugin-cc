@@ -160,7 +160,7 @@ async function cmdSetup(cwd, argv) {
       authenticated: auth.authenticated,
       authDetail: auth.detail ?? null
     },
-    cloud: { available: cloud.available, keyKind: cloud.keyKind },
+    cloud: { available: cloud.available, keyKind: cloud.keyKind, apiUrlError: cloud.apiUrlError },
     git: { available: gitProbe.available, detail: gitProbe.detail ?? null },
     node: { version: process.versions.node, ok: nodeMajor > 18 || (nodeMajor === 18 && nodeMinor >= 18) },
     config
@@ -387,6 +387,9 @@ async function cmdHandoff(cwd, argv) {
   const config = getCloudConfig();
   if (!config.available) {
     throw new Error("DEVIN_API_KEY is not set. Get a key at https://app.devin.ai/settings/api-keys — /devin:handoff needs it.");
+  }
+  if (config.apiUrlError) {
+    throw new Error(config.apiUrlError);
   }
 
   const gitContext = getGitHandoffContext(cwd);

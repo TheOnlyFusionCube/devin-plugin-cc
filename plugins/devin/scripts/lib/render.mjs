@@ -31,6 +31,9 @@ export function renderSetupReport(report) {
   lines.push(`- devin CLI: ${report.devin.installed ? `installed (${report.devin.version ?? "unknown version"})` : "NOT FOUND"}`);
   lines.push(`- auth: ${report.devin.authenticated ? `ok — ${report.devin.authDetail}` : `not authenticated (${report.devin.authDetail ?? "unknown"})`}`);
   lines.push(`- cloud API (DEVIN_API_KEY): ${report.cloud.available ? `set (${report.cloud.keyKind} key)` : "not set — /devin:handoff unavailable"}`);
+  if (report.cloud.apiUrlError) {
+    lines.push(`- cloud API URL (DEVIN_API_URL): REJECTED, cloud calls are disabled (${report.cloud.apiUrlError})`);
+  }
   lines.push(`- git: ${report.git.available ? "ok" : `missing (${report.git.detail})`}`);
   lines.push(`- review gate: ${report.config.stopReviewGate ? "enabled" : "disabled"}`);
   lines.push("");
@@ -41,6 +44,9 @@ export function renderSetupReport(report) {
   }
   if (!report.cloud.available) {
     lines.push("Set DEVIN_API_KEY to enable cloud handoffs (https://app.devin.ai/settings/api-keys). Local review/rescue work without it.");
+  }
+  if (report.cloud.apiUrlError) {
+    lines.push("Unset DEVIN_API_URL (or set it to exactly https://api.devin.ai) so the API key is only ever sent to Devin.");
   }
   if (report.ready) {
     lines.push("Devin is ready.");

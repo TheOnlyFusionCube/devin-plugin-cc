@@ -49,6 +49,12 @@ Fusion surfaces are agent prompts, not a second runtime command. Claude Code use
   when the caller explicitly asks for full auto-approval.
 - **Handoffs require `DEVIN_API_KEY`** in the environment; nothing writes
   secrets to disk.
+- **`DEVIN_API_URL` is validated before any authenticated request**: it must be
+  unset or exactly `https://api.devin.ai` (optional trailing slash). Userinfo,
+  paths, queries, fragments, other ports, and other hosts are rejected, and
+  redirects are never followed. Tests only: with
+  `DEVIN_COMPANION_ALLOW_LOOPBACK_API=1`, an `http(s)` URL on `127.0.0.1`,
+  `[::1]`, or `localhost` (any port) is accepted. `setup` reports a rejected URL.
 
 ## Per-tool wiring
 

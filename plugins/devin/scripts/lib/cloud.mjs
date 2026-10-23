@@ -1,11 +1,61 @@
 const DEFAULT_API_URL = "https://api.devin.ai";
+const LOOPBACK_OPT_IN_ENV = "DEVIN_COMPANION_ALLOW_LOOPBACK_API";
+const LOOPBACK_URL_PATTERN = /^https?:\/\/(?:127\.0\.0\.1|localhost|\[::1\])(?::\d{1,5})?\/?$/i;
 const MAX_DIFF_BYTES = 100 * 1024;
+
+// Resolve the origin that bearer-authenticated requests are sent to. Throws a
+// descriptive Error (never echoing the raw value, which may hold credentials)
+// unless DEVIN_API_URL is unset, exactly https://api.devin.ai (optional single
+// trailing slash, any host casing), or, only with DEVIN_COMPANION_ALLOW_LOOPBACK_API=1,
+// an http(s) loopback URL (127.0.0.1, [::1], localhost) on any port. Everything else
+// is rejected: userinfo, paths, queries, fragments, other ports, other hosts.
+export function resolveApiOrigin(env = process.env) {
+  const raw = env.DEVIN_API_URL;
+  if (raw === undefined || raw === "") {
+    return DEFAULT_API_URL;
+  }
+  if (/[\s\u0000-\u001f\u007f\\]/.test(raw)) {
+    throw new Error("DEVIN_API_URL must not contain whitespace, control characters, or backslashes.");
+  }
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(`DEVIN_API_URL is not a valid URL. Leave it unset to use ${DEFAULT_API_URL}.`);
+  }
+  if (parsed.username || parsed.password || raw.includes("@")) {
+    throw new Error("DEVIN_API_URL must not contain credentials (user:pass@).");
+  }
+  if (parsed.search || parsed.hash || raw.includes("?") || raw.includes("#")) {
+    throw new Error("DEVIN_API_URL must not contain a query string or fragment.");
+  }
+  const isLoopback = LOOPBACK_URL_PATTERN.test(raw);
+  if (isLoopback) {
+    if (env[LOOPBACK_OPT_IN_ENV] !== "1") {
+      throw new Error(`DEVIN_API_URL points at a loopback address, which is only allowed for tests when ${LOOPBACK_OPT_IN_ENV}=1 is set.`);
+    }
+    return parsed.origin;
+  }
+  const normalized = raw.toLowerCase();
+  if (normalized !== DEFAULT_API_URL && normalized !== `${DEFAULT_API_URL}/`) {
+    throw new Error(`DEVIN_API_URL must be exactly ${DEFAULT_API_URL} (no other host, scheme, port, or path). Leave it unset to use the default.`);
+  }
+  return DEFAULT_API_URL;
+}
 
 export function getCloudConfig(env = process.env) {
   const apiKey = env.DEVIN_API_KEY ?? null;
+  let apiUrl = null;
+  let apiUrlError = null;
+  try {
+    apiUrl = resolveApiOrigin(env);
+  } catch (error) {
+    apiUrlError = error instanceof Error ? error.message : String(error);
+  }
   return {
     apiKey,
-    apiUrl: env.DEVIN_API_URL ?? DEFAULT_API_URL,
+    apiUrl,
+    apiUrlError,
     orgId: env.DEVIN_ORG_ID ?? null,
     userId: env.DEVIN_USER_ID ?? null,
     available: Boolean(apiKey),
@@ -13,7 +63,14 @@ export function getCloudConfig(env = process.env) {
   };
 }
 
+function assertApiUrlValid(config) {
+  if (config.apiUrlError || !config.apiUrl) {
+    throw new Error(config.apiUrlError ?? "DEVIN_API_URL failed validation.");
+  }
+}
+
 function resolveApiBase(config) {
+  assertApiUrlValid(config);
   if (config.keyKind === "service") {
     if (!config.orgId) {
       throw new Error("DEVIN_ORG_ID (or --org-id) is required for service keys (cog_*).");
@@ -24,14 +81,20 @@ function resolveApiBase(config) {
 }
 
 async function apiRequest(config, method, url, body) {
+  assertApiUrlValid(config);
   const response = await fetch(url, {
     method,
+    redirect: "error",
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json"
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {})
   });
+
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error(`Devin API returned HTTP ${response.status}; redirects are not followed on authenticated requests.`);
+  }
 
   const text = await response.text();
   let parsed = null;
