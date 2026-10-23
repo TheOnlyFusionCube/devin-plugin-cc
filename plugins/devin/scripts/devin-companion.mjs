@@ -176,13 +176,14 @@ async function cmdSetup(cwd, argv) {
   outputResult(report, renderSetupReport(report), options.json);
 }
 
-function renderDevinOutput({ rawOutput, result, sandboxHint }) {
+function renderDevinOutput({ rawOutput, result, sandboxHint, modelHint }) {
   const base = rawOutput ? `${rawOutput}\n` : `Devin produced no output (exit ${result.exitStatus}).\n${devinFailureMessage(result)}\n`;
-  if (!sandboxHint) {
+  const hints = [sandboxHint, modelHint].filter(Boolean);
+  if (hints.length === 0) {
     return base;
   }
   // Keep Devin's own stderr lines next to the hint even when stdout had content.
-  return `${base}${rawOutput ? `${devinFailureMessage(result)}\n` : ""}\n${sandboxHint}\n`;
+  return `${base}${rawOutput ? `${devinFailureMessage(result)}\n` : ""}\n${hints.join("\n")}\n`;
 }
 
 // A sandbox failure is an error, not a normal completion: exit non-zero. With --json
@@ -197,7 +198,7 @@ function reportSandboxFailure(execution, asJson) {
   }
 }
 
-async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = null, permissionMode = null, sandbox = false, continueLast = false, resumeSessionId = null, title = null, meta = {} }) {
+async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = null, modelExplicit = false, permissionMode = null, sandbox = false, continueLast = false, resumeSessionId = null, title = null, meta = {} }) {
   const jobsDir = resolveJobsDir(cwd);
   fs.mkdirSync(jobsDir, { recursive: true });
   const effectiveModel = model ?? DEFAULT_MODEL;
@@ -247,6 +248,12 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
     // A sandboxed run that fails stays failed: never retry without the sandbox.
     const sandboxHint = sandbox && result.exitStatus !== 0 ? sandboxFailureHint({ stderr: result.stderr }) : null;
 
+    // A Pro-only default model is not retried: point the user at --model or the env var instead.
+    const modelHint =
+      result.exitStatus !== 0 && !modelExplicit && /upgrade to pro/i.test(`${result.stderr}\n${result.stdout}`)
+        ? `The default model (${effectiveModel}) is not available on your Devin plan. Re-run with --model <id> (see \`devin models list\`) or set DEVIN_COMPANION_DEFAULT_MODEL.`
+        : null;
+
     const rawOutput = result.stdout.trim();
     const devinSession = findLatestDevinSession(cwd, { createdAfterMs: startedMs - 60_000 });
     return {
@@ -256,7 +263,7 @@ async function runDevinJob({ cwd, kind, prompt, promptIsFile = false, model = nu
         stderr: result.stderr.trim() || null,
         exitStatus: result.exitStatus
       },
-      rendered: renderDevinOutput({ rawOutput, result, sandboxHint }),
+      rendered: renderDevinOutput({ rawOutput, result, sandboxHint, modelHint }),
       summary: rawOutput.split("\n").find((line) => line.trim())?.slice(0, 140) ?? null,
       devinSessionId: devinSession?.id ?? devinSession?.short_id ?? null,
       sandboxHint
@@ -295,6 +302,7 @@ async function cmdReview(cwd, argv, kind) {
     kind,
     prompt,
     model: options.model ?? null,
+    modelExplicit: options.model != null,
     permissionMode: "autonomous",
     sandbox: true,
     title: `${kind === "adversarial-review" ? "Adversarial review" : "Review"} of ${context.target.label}`,
@@ -341,6 +349,7 @@ async function cmdTask(cwd, argv) {
     kind: "task",
     prompt: taskText,
     model: options.model ?? null,
+    modelExplicit: options.model != null,
     permissionMode,
     sandbox,
     continueLast,

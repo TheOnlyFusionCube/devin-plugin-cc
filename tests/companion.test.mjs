@@ -222,3 +222,61 @@ test("cancel reports finished for completed jobs", () => {
     fake.cleanup();
   }
 });
+
+const UPGRADE_TO_PRO_STDERR = "Error: Upgrade to Pro to access this model (https://devin.ai/pricing)";
+
+function withProOnlyDevin(fn) {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ responseText: "", exitCode: 1, stderrText: UPGRADE_TO_PRO_STDERR });
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    fn({ repo, fake, env: { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir } });
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  }
+}
+
+test("upgrade to Pro failure shows the default-model hint without --model", () => {
+  withProOnlyDevin(({ repo, fake, env }) => {
+    const result = runCompanion(["task", "do something"], { cwd: repo.dir, env });
+    assert.match(result.stdout, /Upgrade to Pro to access this model/);
+    assert.match(result.stdout, /The default model \(swe-2-max\) is not available on your Devin plan\./);
+    assert.match(result.stdout, /--model <id>/);
+    assert.match(result.stdout, /DEVIN_COMPANION_DEFAULT_MODEL/);
+    assert.equal(fake.printRuns().length, 1, "must not auto-retry with another model");
+  });
+});
+
+test("upgrade to Pro failure shows no default-model hint with explicit --model", () => {
+  withProOnlyDevin(({ repo, env }) => {
+    const result = runCompanion(["task", "--model", "custom-model", "do something"], { cwd: repo.dir, env });
+    assert.match(result.stdout, /Upgrade to Pro to access this model/);
+    assert.doesNotMatch(result.stdout, /is not available on your Devin plan/);
+  });
+});
+
+test("DEVIN_COMPANION_DEFAULT_MODEL changes the --model passed and the recorded model", () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin();
+  initGitRepo(repo.dir);
+  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  try {
+    const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir, DEVIN_COMPANION_DEFAULT_MODEL: "custom-default-model" };
+    const result = runCompanion(["task", "do the thing"], { cwd: repo.dir, env });
+    assert.equal(result.status, 0, result.stderr);
+    const runs = fake.printRuns();
+    assert.equal(runs.length, 1);
+    assert.match(runs[0], /--model custom-default-model/);
+    assert.doesNotMatch(runs[0], /swe-2-max/);
+
+    const status = JSON.parse(runCompanion(["status", "--json"], { cwd: repo.dir, env }).stdout);
+    assert.equal(status.jobs[0].model, "custom-default-model");
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  }
+});

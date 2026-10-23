@@ -17,7 +17,7 @@ export const BINARY_SOURCE_LABELS = {
   desktop: "Devin Desktop app bundle"
 };
 export const SESSION_ID_ENV = "DEVIN_COMPANION_SESSION_ID";
-export const DEFAULT_MODEL = "swe-2-max";
+export const DEFAULT_MODEL = process.env.DEVIN_COMPANION_DEFAULT_MODEL || "swe-2-max";
 export const SANDBOX_DOCS_URL = "https://docs.devin.ai/cli/sandbox";
 
 const SANDBOX_FAILURE_PATTERN = /sandbox|seatbelt|bubblewrap|bwrap|socat|seccomp/i;
