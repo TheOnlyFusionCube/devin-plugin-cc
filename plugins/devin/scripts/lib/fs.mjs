@@ -34,9 +34,28 @@ export function isProbablyText(buffer) {
   return true;
 }
 
-export function readStdinIfPiped() {
-  if (process.stdin.isTTY) {
+export function readStdinIfPiped(deps = {}) {
+  const { fstatImpl = fs.fstatSync, readImpl = fs.readFileSync, isTTY = process.stdin.isTTY } = deps;
+  if (isTTY) {
     return "";
   }
-  return fs.readFileSync(0, "utf8");
+  try {
+    const stats = fstatImpl(0);
+    if (!stats.isFIFO() && !stats.isFile()) {
+      return "";
+    }
+  } catch (e) {
+    if (e.code === "EAGAIN" || e.code === "ENXIO") {
+      return "";
+    }
+    throw e;
+  }
+  try {
+    return readImpl(0, "utf8");
+  } catch (e) {
+    if (e.code === "EAGAIN" || e.code === "ENXIO") {
+      return "";
+    }
+    throw e;
+  }
 }
