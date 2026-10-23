@@ -29,6 +29,9 @@ function truncate(text, max = 120) {
 export function renderSetupReport(report) {
   const lines = ["Devin companion setup", ""];
   lines.push(`- devin CLI: ${report.devin.installed ? `installed (${report.devin.version ?? "unknown version"})` : "NOT FOUND"}`);
+  if (report.devin.path) {
+    lines.push(`- devin path: ${report.devin.path} (from ${report.devin.source})`);
+  }
   lines.push(`- auth: ${report.devin.authenticated ? `ok — ${report.devin.authDetail}` : `not authenticated (${report.devin.authDetail ?? "unknown"})`}`);
   lines.push(`- cloud API (DEVIN_API_KEY): ${report.cloud.available ? `set (${report.cloud.keyKind} key)` : "not set — /devin:handoff unavailable"}`);
   if (report.cloud.apiUrlError) {
@@ -37,8 +40,11 @@ export function renderSetupReport(report) {
   lines.push(`- git: ${report.git.available ? "ok" : `missing (${report.git.detail})`}`);
   lines.push(`- review gate: ${report.config.stopReviewGate ? "enabled" : "disabled"}`);
   lines.push("");
-  if (!report.devin.installed) {
+  if (!report.devin.installed && report.devin.path) {
+    lines.push(`The selected devin binary could not be run (${report.devin.probeDetail ?? "unknown error"}). Check ${report.devin.source} or fix the install.`);
+  } else if (!report.devin.installed) {
     lines.push("Devin CLI is missing. Install it: https://docs.devin.ai/cli or `npm i -g devin-cli` if applicable.");
+    lines.push("On macOS, the CLI bundled with Devin Desktop is detected automatically when /Applications/Devin.app is installed.");
   } else if (!report.devin.authenticated) {
     lines.push("Devin is installed but not authenticated. Run `!devin auth login` (or `/login` inside devin) then re-run /devin:setup.");
   }

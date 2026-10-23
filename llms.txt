@@ -35,4 +35,4 @@ Claude Code uses `/plugin marketplace add .` and `/plugin install devin@devin-pl
 
 ## Compatibility
 
-Node.js 18.18 or newer. Git provides review context and handoff diffs (both degrade gracefully without it). Local commands require an authenticated Devin CLI; cloud handoffs require `DEVIN_API_KEY` instead of the CLI.
+Node.js 18.18 or newer. Git provides review context and handoff diffs (both degrade gracefully without it). Local commands require an authenticated Devin CLI (on macOS, the CLI bundled with Devin Desktop is detected automatically when `devin` is not on PATH); cloud handoffs require `DEVIN_API_KEY` instead of the CLI.

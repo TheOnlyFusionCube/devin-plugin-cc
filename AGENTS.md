@@ -84,4 +84,8 @@ npm test
 ```
 
 Uses a fake `devin` binary fixture (`DEVIN_COMPANION_DEVIN_BINARY` env var
-points the companion at any devin-compatible binary).
+points the companion at any devin-compatible binary). Binary lookup order:
+`DEVIN_COMPANION_DEVIN_BINARY`, then `devin` on `PATH`, then on macOS the
+Devin Desktop app-bundle CLI. `setup --json` reports `devin.path` and
+`devin.source`. `DEVIN_COMPANION_DESKTOP_BINARY_CANDIDATE` overrides the
+app-bundle path for tests only.

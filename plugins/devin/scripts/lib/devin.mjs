@@ -1,10 +1,21 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
 
 import { binaryAvailable, formatCommandFailure, runCommand } from "./process.mjs";
 
-export const DEVIN_BINARY = process.env.DEVIN_COMPANION_DEVIN_BINARY ?? "devin";
+export const BINARY_ENV = "DEVIN_COMPANION_DEVIN_BINARY";
+// Devin Desktop ships the CLI inside its app bundle without putting it on PATH.
+export const DESKTOP_BINARY_CANDIDATE =
+  "/Applications/Devin.app/Contents/Resources/app/extensions/windsurf/devin/bin/devin";
+// Test-only: replaces the app-bundle path (and skips the darwin check) so tests can simulate Devin Desktop.
+export const DESKTOP_CANDIDATE_ENV = "DEVIN_COMPANION_DESKTOP_BINARY_CANDIDATE";
+export const BINARY_SOURCE_LABELS = {
+  env: BINARY_ENV,
+  path: "PATH",
+  desktop: "Devin Desktop app bundle"
+};
 export const SESSION_ID_ENV = "DEVIN_COMPANION_SESSION_ID";
 export const DEFAULT_MODEL = "swe-2-max";
 export const SANDBOX_DOCS_URL = "https://docs.devin.ai/cli/sandbox";
@@ -21,8 +32,79 @@ const VALID_PERMISSION_MODES = new Set([
   "autonomous"
 ]);
 
+function defaultIsExecutable(file) {
+  try {
+    if (!fs.statSync(file).isFile()) {
+      return false;
+    }
+    fs.accessSync(file, fs.constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Order: explicit env override, `devin` on PATH, then the Devin Desktop app bundle (macOS only).
+// Returns { path, source } or null when no devin CLI can be found.
+export function resolveDevinBinary({
+  env = process.env,
+  platform = process.platform,
+  candidates = [DESKTOP_BINARY_CANDIDATE],
+  isExecutable = defaultIsExecutable,
+  realpath = fs.realpathSync
+} = {}) {
+  if (env[BINARY_ENV]) {
+    // Use exactly what the user chose; a bad value surfaces as a failed probe, never a silent fallback.
+    return { path: env[BINARY_ENV], source: "env" };
+  }
+
+  if (platform === "win32") {
+    // Windows commands run through a shell that does its own PATH and PATHEXT lookup.
+    return { path: "devin", source: "path" };
+  }
+
+  for (const dir of (env.PATH ?? "").split(path.delimiter)) {
+    if (!dir) {
+      continue;
+    }
+    const found = path.join(dir, "devin");
+    if (isExecutable(found)) {
+      return { path: found, source: "path" };
+    }
+  }
+
+  const testCandidate = env[DESKTOP_CANDIDATE_ENV];
+  const fallbacks = testCandidate ? [testCandidate] : platform === "darwin" ? candidates : [];
+  for (const candidate of fallbacks) {
+    try {
+      const resolved = realpath(candidate);
+      if (isExecutable(resolved)) {
+        return { path: resolved, source: "desktop" };
+      }
+    } catch {
+      // Missing or unreadable candidate: try the next one.
+    }
+  }
+  return null;
+}
+
+let resolvedBinary;
+
+// Resolved once per process so setup, auth, session listing, and print runs all use the same binary.
+export function getResolvedDevinBinary() {
+  if (resolvedBinary === undefined) {
+    resolvedBinary = resolveDevinBinary();
+  }
+  return resolvedBinary;
+}
+
+// The command to spawn. Falls back to a bare "devin" so a missing CLI fails with the usual ENOENT.
+export function getDevinBinary() {
+  return getResolvedDevinBinary()?.path ?? "devin";
+}
+
 export function getDevinAvailability(cwd) {
-  const probe = binaryAvailable(DEVIN_BINARY, ["version"], { cwd });
+  const probe = binaryAvailable(getDevinBinary(), ["version"], { cwd });
   if (!probe.available) {
     return {
       available: false,
@@ -42,7 +124,7 @@ export function getDevinAvailability(cwd) {
 }
 
 export function getDevinAuthStatus(cwd) {
-  const result = runCommand(DEVIN_BINARY, ["auth", "status"], { cwd });
+  const result = runCommand(getDevinBinary(), ["auth", "status"], { cwd });
   if (result.error) {
     if (result.error.code === "ENOENT") {
       return { authenticated: false, detail: "devin binary not found" };
@@ -136,7 +218,7 @@ export function sandboxFailureHint({ platform = process.platform, stderr = "" } 
 }
 
 export function listDevinSessions(cwd) {
-  const result = runCommand(DEVIN_BINARY, ["list", "--format", "json"], { cwd });
+  const result = runCommand(getDevinBinary(), ["list", "--format", "json"], { cwd });
   if (result.error || result.status !== 0) {
     return [];
   }
@@ -191,7 +273,7 @@ export function findTaskResumeCandidate(cwd) {
 
 export function runDevinPrint({ cwd, args, onStderr = null, onSpawn = null } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(DEVIN_BINARY, args, {
+    const child = spawn(getDevinBinary(), args, {
       cwd,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -240,5 +322,5 @@ export function devinFailureMessage(result) {
   if (stdout) {
     return `devin exited ${result.exitStatus} with no error output`;
   }
-  return formatCommandFailure({ command: DEVIN_BINARY, args: [], status: result.exitStatus, signal: result.signal, stderr: "", stdout: "" });
+  return formatCommandFailure({ command: getDevinBinary(), args: [], status: result.exitStatus, signal: result.signal, stderr: "", stdout: "" });
 }

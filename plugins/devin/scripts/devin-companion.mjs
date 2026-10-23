@@ -18,12 +18,14 @@ import {
 import {
   buildDevinPrintArgs,
   DEFAULT_MODEL,
-  DEVIN_BINARY,
+  BINARY_SOURCE_LABELS,
   devinFailureMessage,
   findLatestDevinSession,
   findTaskResumeCandidate,
   getDevinAuthStatus,
+  getDevinBinary,
   getDevinAvailability,
+  getResolvedDevinBinary,
   normalizePermissionMode,
   runDevinPrint,
   sandboxFailureHint
@@ -145,7 +147,8 @@ async function cmdSetup(cwd, argv) {
     setConfig(cwd, "stopReviewGate", false);
   }
 
-  const binaryProbe = binaryAvailable(DEVIN_BINARY, ["version"], { cwd });
+  const resolvedBinary = getResolvedDevinBinary();
+  const binaryProbe = binaryAvailable(getDevinBinary(), ["version"], { cwd });
   const auth = binaryProbe.available ? getDevinAuthStatus(cwd) : { authenticated: false, detail: "devin not installed" };
   const cloud = getCloudConfig();
   const gitProbe = binaryAvailable("git", ["--version"], { cwd });
@@ -156,7 +159,10 @@ async function cmdSetup(cwd, argv) {
     ready: binaryProbe.available && auth.authenticated,
     devin: {
       installed: binaryProbe.available,
+      path: resolvedBinary?.path ?? null,
+      source: resolvedBinary ? BINARY_SOURCE_LABELS[resolvedBinary.source] : null,
       version: binaryProbe.available ? binaryProbe.detail : null,
+      probeDetail: binaryProbe.available ? null : binaryProbe.detail,
       authenticated: auth.authenticated,
       authDetail: auth.detail ?? null
     },
