@@ -16,7 +16,7 @@ import {
 const COMPANION = fileURLToPath(new URL("../plugins/devin/scripts/devin-companion.mjs", import.meta.url));
 const PRODUCTION = "https://api.devin.ai";
 const OPT_IN = "DEVIN_COMPANION_ALLOW_LOOPBACK_API";
-const API_KEY = "apk_test_secret_key";
+const API_KEY = "apk_secret_example";
 
 const MALICIOUS_URLS = [
   "http://api.devin.ai",
@@ -159,7 +159,7 @@ test("no credential-bearing request is made for any malicious URL (create, get, 
       await assert.rejects(createCloudSession({ task: "t", config }), Error, JSON.stringify(value));
       await assert.rejects(getCloudSession("devin-x", config), Error, JSON.stringify(value));
       await assert.rejects(sendCloudMessage("devin-x", "hi", config), Error, JSON.stringify(value));
-      const serviceConfig = getCloudConfig({ ...envFor(value), DEVIN_API_KEY: "cog_service_key", DEVIN_ORG_ID: "org-1" });
+      const serviceConfig = getCloudConfig({ ...envFor(value), DEVIN_API_KEY: "cog_service_example", DEVIN_ORG_ID: "org-1" });
       await assert.rejects(createCloudSession({ task: "t", config: serviceConfig }), Error, JSON.stringify(value));
     }
     assert.equal(calls.length, 0, "fetch must never be invoked");
