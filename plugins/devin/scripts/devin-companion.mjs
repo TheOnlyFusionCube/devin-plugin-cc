@@ -13,7 +13,7 @@ import {
   getCloudSession,
   isTerminalCloudStatus,
   pollCloudSession,
-  sendCloudMessage
+  stopCloudSession
 } from "./lib/cloud.mjs";
 import {
   buildDevinPrintArgs,
@@ -676,13 +676,17 @@ async function cmdCancel(cwd, argv) {
     delivered = outcome.delivered;
   }
 
+  // null: no remote stop attempted; false: attempted but not confirmed.
+  let remoteStopped = null;
   if (job.kind === "handoff" && job.cloudSessionId && getCloudConfig().available) {
-    await sendCloudMessage(job.cloudSessionId, "Please stop working on this task — it was cancelled by the user.").catch(() => null);
+    remoteStopped = await stopCloudSession(job.cloudSessionId, getCloudConfig())
+      .then(() => true)
+      .catch(() => false);
   }
 
   outputResult(
-    { jobId: job.id, status: "cancelled", delivered },
-    renderCancelReport({ job, delivered }),
+    { jobId: job.id, status: "cancelled", delivered, remoteStopped },
+    renderCancelReport({ job, delivered, remoteStopped }),
     options.json
   );
 }
