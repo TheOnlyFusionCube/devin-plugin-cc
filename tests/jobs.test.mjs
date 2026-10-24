@@ -10,10 +10,11 @@ import {
 } from "../plugins/devin/scripts/lib/jobs.mjs";
 import { isTerminalCloudStatus } from "../plugins/devin/scripts/lib/cloud.mjs";
 
-test("isJobActive covers running, queued, detached", () => {
+test("isJobActive covers running, queued, detached, cancel_pending", () => {
   assert.equal(isJobActive({ status: "running" }), true);
   assert.equal(isJobActive({ status: "queued" }), true);
   assert.equal(isJobActive({ status: "detached" }), true);
+  assert.equal(isJobActive({ status: "cancel_pending" }), true);
   assert.equal(isJobActive({ status: "completed" }), false);
   assert.equal(isJobActive({ status: "cancelled" }), false);
 });

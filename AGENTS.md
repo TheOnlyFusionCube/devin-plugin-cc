@@ -31,7 +31,7 @@ passed through verbatim as prompt text.
 | `handoff` | Create a cloud session at app.devin.ai with repo+branch+diff context | `--wait`, `--background`, `--context`, `--tag`, `--poll-interval-ms` (both poll to terminal — detach in your own agent loop instead) |
 | `status` | List jobs; `status <id>` for one; `--wait` polls to terminal | `--json`, `--timeout-ms` |
 | `result` | Print a finished job's stored output verbatim | `--json` |
-| `cancel` | Kill a running job's process tree (or terminate a cloud session) | — |
+| `cancel` | Kill a running job's process tree (or terminate a cloud session; the job is `cancelled` only once the stop is confirmed, otherwise `cancel_pending`, which stays active and can be retried) | none |
 
 Every command accepts `--json` for machine-readable output.
 
