@@ -129,7 +129,7 @@ In Codex, install the fusion skill (via `codex plugin add fusion@devin-plugin-cc
 ## Hooks
 
 - **SessionStart** — exports session metadata for job attribution.
-- **SessionEnd** — kills local jobs still running from this session. Detached cloud handoffs are left alone and reconciled on the next `status`/`result` call.
+- **SessionEnd**: kills local jobs still running from this session. Cloud handoffs are never marked cancelled by the hook: a `--wait`/`--background` handoff only loses its local poller and becomes `detached`, like a plain handoff, because the remote session keeps running. Both are reconciled on the next `status`/`result` call, and `/devin:cancel` still stops the remote session.
 - **Stop (opt-in)**: when enabled via `/devin:setup --enable-review-gate`, reviews the previous turn's diff and blocks session stop only on a `BLOCK:` verdict. Infrastructure failures, including an unavailable sandbox, fail open with a warning; the gate never reruns the review without the sandbox.
 
 ## State
