@@ -112,7 +112,7 @@ devin plugins install TheOnlyFusionCube/devin-plugin-cc#plugins/devin
 | `/devin:handoff <task>` | Create a cloud Devin session carrying repo, branch, context, and a bounded uncommitted diff. `--wait` polls until terminal. |
 | `/devin:status [job-id]` | List local jobs and cloud handoffs, with live phase/elapsed info. |
 | `/devin:result [job-id]` | Show the complete stored output of a finished job. |
-| `/devin:cancel <job-id>` | Kill a running local job's process tree; for cloud handoffs also asks the session to stop. |
+| `/devin:cancel <job-id>` | Kill a running local job's process tree; for cloud handoffs also terminates the remote session and confirms it with a follow-up read. If the stop cannot be confirmed (missing key, API error) the job stays `cancel_pending`, still shows as active in `/devin:status`, and can be retried. |
 
 Review commands are strictly read-only: they never apply fixes. They run inside Devin's OS-level sandbox and fail closed: if the sandbox cannot start, the job fails with platform-specific guidance and is never retried without it. macOS (Seatbelt) works out of the box, Linux needs `bubblewrap` (`bwrap`) and `socat`, and native Windows is not supported (use WSL2). See the [Devin sandbox docs](https://docs.devin.ai/cli/sandbox). Arguments are parsed POSIX-style: flags first, then free text passed through verbatim.
 

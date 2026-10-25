@@ -128,15 +128,33 @@ export function renderStoredJobResult(job) {
   return `Job ${job?.id ?? "?"} has no stored output yet (status: ${job?.status ?? "unknown"}).\n`;
 }
 
-export function renderCancelReport({ job, delivered }) {
+export function renderCancelReport({ job, delivered, remoteStopped = null, status = "cancelled", diagnostic = null }) {
   const lines = [];
+  if (status === "cancel_pending") {
+    lines.push(`Job ${job.id} (${job.kind}) is NOT cancelled: the cloud session was not confirmed stopped and may still be running.`);
+    if (delivered) {
+      lines.push("The local poller was stopped.");
+    }
+    if (job.sessionUrl) {
+      lines.push(`Cloud session: ${job.sessionUrl}`);
+    }
+    if (diagnostic) {
+      lines.push(`Reason: ${diagnostic}`);
+    }
+    lines.push(`Retry with /devin:cancel ${job.id}, re-check with /devin:status ${job.id}, or stop it in the Devin web app.`);
+    return `${lines.join("\n")}\n`;
+  }
   if (delivered) {
     lines.push(`Cancellation requested for job ${job.id} (${job.kind}).`);
   } else {
     lines.push(`Job ${job.id} (${job.kind}) was already finished or its process is gone; marked cancelled.`);
   }
   if (job.sessionUrl) {
-    lines.push(`Cloud session: ${job.sessionUrl} — stop or message it from the Devin web app if it is still running.`);
+    lines.push(
+      remoteStopped
+        ? `Cloud session: ${job.sessionUrl} (stopped remotely, confirmed).`
+        : `Cloud session: ${job.sessionUrl} (could not confirm the remote stop; check the Devin web app).`
+    );
   }
   return `${lines.join("\n")}\n`;
 }

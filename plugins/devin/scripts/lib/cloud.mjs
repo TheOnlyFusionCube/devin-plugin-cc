@@ -175,7 +175,8 @@ export async function getCloudSession(sessionId, config = getCloudConfig()) {
     statusDetail: body?.status_detail ?? null,
     title: body?.title ?? null,
     url: body?.url ?? null,
-    pullRequestUrl: body?.pull_request?.url ?? body?.pull_requests?.[0]?.url ?? null,
+    // v1 returns pull_request: {url}; v3 returns pull_requests: [{pr_url, pr_state}].
+    pullRequestUrl: body?.pull_request?.url ?? body?.pull_requests?.[0]?.pr_url ?? body?.pull_requests?.[0]?.url ?? null,
     structuredOutput: body?.structured_output ?? null,
     raw: body
   };
@@ -187,6 +188,71 @@ export async function sendCloudMessage(sessionId, message, config = getCloudConf
   }
   const base = resolveApiBase(config);
   return apiRequest(config, "POST", `${base}/sessions/${sessionId}/messages`, { message });
+}
+
+// Terminates the remote session instead of only asking it to stop. Both API
+// versions use the same relative path: DELETE /v1/sessions/{session_id} for
+// personal keys, DELETE /v3/organizations/{org_id}/sessions/{devin_id} for
+// service keys, so resolveApiBase picks the right base for either.
+export async function stopCloudSession(sessionId, config = getCloudConfig()) {
+  if (!config.available) {
+    throw new Error("DEVIN_API_KEY is not set.");
+  }
+  const base = resolveApiBase(config);
+  return apiRequest(config, "DELETE", `${base}/sessions/${sessionId}`);
+}
+
+// The session itself no longer runs. Stricter than isTerminalCloudStatus, which
+// also counts waiting_for_user and finished: those sessions are still alive.
+export function isCloudSessionStopped({ status }) {
+  return status === "exit" || status === "error" || status === "suspended";
+}
+
+function sanitizeDiagnostic(error, config) {
+  let text = (error instanceof Error ? error.message : String(error)).replace(/\s+/g, " ").trim();
+  if (config.apiKey) {
+    text = text.split(config.apiKey).join("[redacted]");
+  }
+  return text.length > 300 ? `${text.slice(0, 299)}…` : text;
+}
+
+// Stops the remote session and reports whether the stop is CONFIRMED. The DELETE
+// response is never trusted on its own: v1 returns only {detail}, and v3 returns a
+// SessionResponse whose status is not documented as the post-termination state
+// (status_detail is only populated on GET). So after the DELETE, even a failed one
+// (v1 rejects DELETE on an already-exited session), we GET the session and confirm
+// only when its status is exit, error, or suspended. Never throws; the diagnostic
+// never contains the API key or the DEVIN_API_URL value.
+export async function terminateCloudSession(sessionId, config = getCloudConfig()) {
+  if (!config.available) {
+    return { confirmed: false, status: null, diagnostic: "DEVIN_API_KEY is not set; it is needed to stop the remote session." };
+  }
+  let deleteError = null;
+  try {
+    await stopCloudSession(sessionId, config);
+  } catch (error) {
+    deleteError = sanitizeDiagnostic(error, config);
+  }
+  let status = null;
+  let readError = null;
+  try {
+    const snapshot = await getCloudSession(sessionId, config);
+    status = snapshot.status;
+    if (isCloudSessionStopped(snapshot)) {
+      return { confirmed: true, status, diagnostic: null };
+    }
+  } catch (error) {
+    readError = sanitizeDiagnostic(error, config);
+  }
+  const parts = [deleteError ? `Stop request failed: ${deleteError}` : "Stop request was accepted."];
+  if (readError) {
+    if (readError !== deleteError) {
+      parts.push(`Could not read the session to confirm: ${readError}`);
+    }
+  } else {
+    parts.push(`The session is still reported as "${status}".`);
+  }
+  return { confirmed: false, status, diagnostic: parts.join(" ") };
 }
 
 export function isTerminalCloudStatus({ status, statusDetail }) {

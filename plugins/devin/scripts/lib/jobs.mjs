@@ -160,8 +160,15 @@ export function sortJobsNewestFirst(jobs) {
   });
 }
 
+// cancel_pending: a cancel was requested but the remote cloud session is not
+// confirmed stopped, so it stays active and refreshable until it is.
 export function isJobActive(job) {
-  return job?.status === "queued" || job?.status === "running" || job?.status === "detached";
+  return (
+    job?.status === "queued" ||
+    job?.status === "running" ||
+    job?.status === "detached" ||
+    job?.status === "cancel_pending"
+  );
 }
 
 export function elapsedMs(job) {

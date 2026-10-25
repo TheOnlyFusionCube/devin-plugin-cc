@@ -11,9 +11,10 @@ import {
   createCloudSession,
   getCloudConfig,
   getCloudSession,
+  isCloudSessionStopped,
   isTerminalCloudStatus,
   pollCloudSession,
-  sendCloudMessage
+  terminateCloudSession
 } from "./lib/cloud.mjs";
 import {
   buildDevinPrintArgs,
@@ -525,7 +526,13 @@ async function refreshCloudJob(cwd, job) {
       pullRequestUrl: snapshot.pullRequestUrl,
       sessionUrl: snapshot.url ?? job.sessionUrl
     };
-    if (verdict.terminal) {
+    if (job.status === "cancel_pending") {
+      // Only an observed-stopped session settles a pending cancel; a session that
+      // is merely waiting_for_user or finished may still be alive.
+      if (isCloudSessionStopped(snapshot)) {
+        Object.assign(patch, { status: "cancelled", phase: "cancelled", completedAt: nowIso(), errorMessage: null });
+      }
+    } else if (verdict.terminal) {
       patch.status = verdict.ok ? "completed" : "failed";
       patch.completedAt = nowIso();
     }
@@ -647,6 +654,51 @@ async function cmdResult(cwd, argv) {
   outputResult({ jobId: job.id, kind: job.kind, status: job.status, rendered, result: job.result ?? null }, rendered, options.json);
 }
 
+function persistJobPatch(cwd, patch) {
+  upsertJob(cwd, patch);
+  const jobFile = resolveJobFile(cwd, patch.id);
+  if (fs.existsSync(jobFile)) {
+    writeJobFile(cwd, patch.id, { ...readJobFile(jobFile), ...patch });
+  }
+}
+
+// Cloud handoffs only become "cancelled" once the remote session is confirmed
+// stopped. cancel_pending is written first, so a crash or failure anywhere below
+// leaves the job active and refreshable instead of hiding a billing session.
+async function cancelCloudHandoff(cwd, job, asJson) {
+  persistJobPatch(cwd, {
+    id: job.id,
+    status: "cancel_pending",
+    phase: "cancel_pending",
+    pid: null,
+    errorMessage: "Cancel requested; the remote stop is not confirmed yet."
+  });
+
+  let delivered = false;
+  if (job.pid) {
+    delivered = terminateProcessTree(job.pid).delivered;
+  }
+
+  const outcome = await terminateCloudSession(job.cloudSessionId, getCloudConfig());
+  const patch = outcome.confirmed
+    ? { id: job.id, status: "cancelled", phase: "cancelled", errorMessage: null, completedAt: nowIso() }
+    : { id: job.id, status: "cancel_pending", phase: "cancel_pending", errorMessage: outcome.diagnostic };
+  persistJobPatch(cwd, patch);
+
+  outputResult(
+    {
+      jobId: job.id,
+      status: patch.status,
+      delivered,
+      remoteStopped: outcome.confirmed,
+      remoteStatus: outcome.status,
+      errorMessage: patch.errorMessage
+    },
+    renderCancelReport({ job, delivered, remoteStopped: outcome.confirmed, status: patch.status, diagnostic: outcome.diagnostic }),
+    asJson
+  );
+}
+
 async function cmdCancel(cwd, argv) {
   const { options, positionals } = parseCommandInput(argv, { booleanOptions: ["json"] });
   const jobId = positionals[0] ?? null;
@@ -659,16 +711,15 @@ async function cmdCancel(cwd, argv) {
     return;
   }
 
+  if (job.kind === "handoff" && job.cloudSessionId) {
+    await cancelCloudHandoff(cwd, job, options.json);
+    return;
+  }
+
   // Mark cancelled BEFORE killing: the running companion's close handler
   // re-reads the job file after its child dies and must see "cancelled" so it
   // doesn't overwrite the outcome with "failed".
-  const completedAt = nowIso();
-  const patch = { id: job.id, status: "cancelled", phase: "cancelled", pid: null, completedAt };
-  upsertJob(cwd, patch);
-  const jobFile = resolveJobFile(cwd, job.id);
-  if (fs.existsSync(jobFile)) {
-    writeJobFile(cwd, job.id, { ...readJobFile(jobFile), ...patch });
-  }
+  persistJobPatch(cwd, { id: job.id, status: "cancelled", phase: "cancelled", pid: null, completedAt: nowIso() });
 
   let delivered = false;
   if (job.pid) {
@@ -676,13 +727,9 @@ async function cmdCancel(cwd, argv) {
     delivered = outcome.delivered;
   }
 
-  if (job.kind === "handoff" && job.cloudSessionId && getCloudConfig().available) {
-    await sendCloudMessage(job.cloudSessionId, "Please stop working on this task — it was cancelled by the user.").catch(() => null);
-  }
-
   outputResult(
-    { jobId: job.id, status: "cancelled", delivered },
-    renderCancelReport({ job, delivered }),
+    { jobId: job.id, status: "cancelled", delivered, remoteStopped: null },
+    renderCancelReport({ job, delivered, remoteStopped: null }),
     options.json
   );
 }
