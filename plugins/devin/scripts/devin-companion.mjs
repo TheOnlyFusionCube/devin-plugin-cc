@@ -444,7 +444,7 @@ async function cmdHandoff(cwd, argv) {
   const { sessionId, url } = created;
 
   // --wait keeps a pid so cancel can kill the poller; detached has none so it
-  // outlives the session without being swept by cleanup.
+  // outlives the session. SessionEnd turns a polled handoff into a detached one.
   const base = {
     ...job,
     cloudSessionId: sessionId,
