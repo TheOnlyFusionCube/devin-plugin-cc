@@ -118,6 +118,8 @@ Review commands are strictly read-only: they never apply fixes. They run inside 
 
 The default model is pinned to **`swe-2-max`** (SWE-2 Max); pass `--model <id>` to any review/task command to override — `devin models list` shows what your account can use.
 
+To change the default for every run, set `DEVIN_COMPANION_DEFAULT_MODEL` (useful on Devin Free, where `swe-2-max` is not available).
+
 ### Fusion
 
 Fusion keeps the frontier model responsible for intent, planning, ambiguity, and final review while Devin handles bounded mechanical or test-heavy work in its own context. Cognition describes this sidekick pattern as two parallel agents with dynamic handoffs as the task evolves. See [Devin Fusion](https://cognition.com/blog/devin-fusion). This repo reimplements that pattern as prompts — the lead is your Claude or Codex session, not a separate Devin Fusion harness.
