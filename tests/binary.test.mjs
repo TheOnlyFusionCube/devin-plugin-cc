@@ -177,7 +177,7 @@ test("setup reports not installed when no devin is reachable", () => {
     const { result, report } = runSetup({ PATH: emptyPath, [DESKTOP_CANDIDATE_ENV]: path.join(emptyPath, "missing") }, repo.dir);
     assert.equal(result.status, 0, result.stderr);
     assert.equal(report.devin.installed, false);
-    // Windows resolves to bare "devin" for shell PATH lookup even when unreachable.
+    // Windows defers PATH and PATHEXT resolution to cross-spawn, even when the CLI is unreachable.
     assert.equal(report.devin.path, process.platform === "win32" ? "devin" : null);
     assert.equal(report.ready, false);
   } finally {
@@ -229,7 +229,7 @@ test("PATH devin wins over the app bundle in the companion", () => {
   const bundle = createFakeDevin();
   try {
     const { report } = runSetup({ PATH: onPath.dir, [DESKTOP_CANDIDATE_ENV]: bundle.binPath }, repo.dir);
-    // On Windows the resolver returns bare "devin" — the shell does PATH/PATHEXT lookup.
+    // cross-spawn resolves the bare command through PATH and PATHEXT on Windows.
     const expectedPath = process.platform === "win32" ? "devin" : path.join(onPath.dir, "devin");
     assert.equal(report.devin.path, expectedPath);
     assert.equal(report.devin.source, "PATH");
