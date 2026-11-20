@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -238,7 +240,7 @@ function runCompanion(args, { cwd, env = {} }) {
 
 test("setup reports a rejected DEVIN_API_URL without crashing", () => {
   const repo = createTempRepo();
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { CLAUDE_PLUGIN_DATA: dataDir, DEVIN_API_KEY: API_KEY, DEVIN_API_URL: "https://user:hunter2@evil.com" };
     const json = runCompanion(["setup", "--json"], { cwd: repo.dir, env });
@@ -256,7 +258,7 @@ test("setup reports a rejected DEVIN_API_URL without crashing", () => {
 
 test("handoff with a rejected DEVIN_API_URL fails before creating a job or any request", () => {
   const repo = createTempRepo();
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { CLAUDE_PLUGIN_DATA: dataDir, DEVIN_API_KEY: API_KEY, DEVIN_API_URL: "https://api.devin.ai.evil.com" };
     const result = runCompanion(["handoff", "fix", "ci"], { cwd: repo.dir, env });

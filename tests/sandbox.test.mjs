@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -33,7 +34,7 @@ function withFailingDevin(stderrText, fn) {
   const repo = createTempRepo();
   const fake = createFakeDevin({ responseText: "", exitCode: 1, stderrText });
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     fn({ repo, fake, env });

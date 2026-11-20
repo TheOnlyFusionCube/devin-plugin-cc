@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -31,7 +32,7 @@ test("task runs devin -p and records a completed job", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin({ responseText: "ALL_DONE" });
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(["task", "do", "the", "thing"], { cwd: repo.dir, env });
@@ -62,7 +63,7 @@ test("task --resume passes -c to devin", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(["task", "--resume", "keep going"], { cwd: repo.dir, env });
@@ -79,7 +80,7 @@ test("task --resume-id passes -r <id> to devin", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(["task", "--resume-id", "brisk-otter", "continue"], { cwd: repo.dir, env });
@@ -147,7 +148,7 @@ test("task text containing flag-like words passes through verbatim", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(
@@ -170,7 +171,7 @@ test("task text containing flag-like words passes through verbatim", () => {
 test("setup reports ready=false when devin auth fails", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin({ failAuth: true });
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(["setup", "--json"], { cwd: repo.dir, env });
@@ -187,7 +188,7 @@ test("setup reports ready=false when devin auth fails", () => {
 test("setup reports authenticated=false when devin auth status exits 0 while logged out", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin({ loggedOutExitZero: true });
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(["setup", "--json"], { cwd: repo.dir, env });
@@ -204,7 +205,7 @@ test("setup reports authenticated=false when devin auth status exits 0 while log
 test("setup --enable-review-gate persists config", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     runCompanion(["setup", "--enable-review-gate"], { cwd: repo.dir, env });
@@ -224,7 +225,7 @@ test("review builds a prompt containing the diff and runs read-only", () => {
   const fake = createFakeDevin({ responseText: "## Verdict\nAPPROVE" });
   initGitRepo(repo.dir);
   fs.writeFileSync(path.join(repo.dir, "hello.txt"), "hello changed\n");
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     const result = runCompanion(["review", "--wait"], { cwd: repo.dir, env });
@@ -245,7 +246,7 @@ test("handoff without DEVIN_API_KEY fails with guidance", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir, DEVIN_API_KEY: "" };
     const result = runCompanion(["handoff", "fix", "ci"], { cwd: repo.dir, env });
@@ -261,7 +262,7 @@ test("cancel reports finished for completed jobs", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();
   initGitRepo(repo.dir);
-  const dataDir = fs.mkdtempSync("/tmp/devin-plugin-data-");
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
   try {
     const env = { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir };
     runCompanion(["task", "x"], { cwd: repo.dir, env });
