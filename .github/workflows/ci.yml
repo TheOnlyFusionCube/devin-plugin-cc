@@ -18,6 +18,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run lint
+      - run: node scripts/check-plugin-install.mjs
       - run: npm test
       - run: npm run doctor
 
@@ -30,6 +31,7 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm run lint
+      - run: node scripts/check-plugin-install.mjs
       - run: npm test
 
   test-macos:
@@ -41,4 +43,5 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm run lint
+      - run: node scripts/check-plugin-install.mjs
       - run: npm test
