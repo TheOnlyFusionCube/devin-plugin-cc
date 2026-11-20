@@ -92,6 +92,57 @@ test("task --resume-id passes -r <id> to devin", () => {
   }
 });
 
+test("Windows .cmd execution preserves metacharacters in CLI arguments", { skip: process.platform !== "win32" }, () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ responseText: "SAFE_ARGUMENTS" });
+  initGitRepo(repo.dir);
+  const dataDir = path.join(repo.dir, "plugin-data");
+  fs.mkdirSync(dataDir, { recursive: true });
+  const sentinel = path.join(fake.dir, "shell-injected.txt");
+  const maliciousModel = `safe & echo INJECTED > "${sentinel}"`;
+  try {
+    const result = runCompanion(["task", "--model", maliciousModel, "--", "hello"], {
+      cwd: repo.dir,
+      env: { ...fake.env, CLAUDE_PLUGIN_DATA: dataDir }
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /SAFE_ARGUMENTS/);
+    assert.equal(fs.existsSync(sentinel), false, "model text must not execute as shell syntax");
+    const printArgs = fake.argumentRuns().find((args) => args[0] === "-p");
+    assert.ok(printArgs, "the fake Devin CLI must receive a print invocation");
+    const modelIndex = printArgs.indexOf("--model");
+    assert.notEqual(modelIndex, -1);
+    assert.equal(printArgs[modelIndex + 1], maliciousModel);
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
+
+test("Windows PATH lookup executes a .cmd Devin shim", { skip: process.platform !== "win32" }, () => {
+  const repo = createTempRepo();
+  const fake = createFakeDevin({ responseText: "PATH_SHIM_EXECUTED" });
+  initGitRepo(repo.dir);
+  const dataDir = path.join(repo.dir, "plugin-data");
+  fs.mkdirSync(dataDir, { recursive: true });
+  try {
+    const result = runCompanion(["task", "--", "hello"], {
+      cwd: repo.dir,
+      env: {
+        DEVIN_COMPANION_DEVIN_BINARY: "",
+        PATH: [fake.dir, process.env.PATH].filter(Boolean).join(path.delimiter),
+        CLAUDE_PLUGIN_DATA: dataDir
+      }
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /PATH_SHIM_EXECUTED/);
+    assert.ok(fake.argumentRuns().some((args) => args[0] === "-p"));
+  } finally {
+    repo.cleanup();
+    fake.cleanup();
+  }
+});
+
 test("task text containing flag-like words passes through verbatim", () => {
   const repo = createTempRepo();
   const fake = createFakeDevin();

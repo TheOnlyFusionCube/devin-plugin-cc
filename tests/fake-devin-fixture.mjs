@@ -19,6 +19,11 @@ function makeAccessors(dir, marker) {
       }
       return fs.readFileSync(file, "utf8").trim().split("\n").filter((line) => line.startsWith("-p"));
     },
+    argumentRuns() {
+      const file = `${marker}.argv`;
+      if (!fs.existsSync(file)) return [];
+      return fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+    },
     lastPrompt() {
       return fs.existsSync(`${marker}.lastprompt`) ? fs.readFileSync(`${marker}.lastprompt`, "utf8") : null;
     },

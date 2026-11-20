@@ -11,6 +11,7 @@ const config = JSON.parse(fs.readFileSync(path.join(dir, "fixture.json"), "utf8"
 
 const args = process.argv.slice(2);
 fs.appendFileSync(`${marker}.args`, `${args.join(" ")}\n`);
+fs.appendFileSync(`${marker}.argv`, `${JSON.stringify(args)}\n`);
 const cmd = args[0] || "";
 
 function emit(obj) {

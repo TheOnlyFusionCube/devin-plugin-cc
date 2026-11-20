@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import spawn from "cross-spawn";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -274,12 +274,11 @@ export function findTaskResumeCandidate(cwd) {
 export function runDevinPrint({ cwd, args, onStderr = null, onSpawn = null } = {}) {
   return new Promise((resolve, reject) => {
     const binary = getDevinBinary();
+    // cross-spawn resolves Windows PATHEXT entries and safely quotes cmd-shim arguments.
     const child = spawn(binary, args, {
       cwd,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
-      // .cmd/.bat binaries (e.g. test fixtures, npm shims) require a shell on Windows.
-      shell: process.platform === "win32" && /\.(cmd|bat)$/i.test(binary),
       // Own process group so kill(-pid) tears down devin and anything it spawns.
       detached: process.platform !== "win32",
       windowsHide: true
