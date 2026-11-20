@@ -9,6 +9,7 @@
   "scripts": {
     "prepare": "node scripts/install.mjs",
     "doctor": "node plugins/devin/scripts/devin-companion.mjs setup",
+    "lint": "node scripts/syntax-check.mjs",
     "test": "node --test"
   },
   "bin": {
@@ -49,5 +50,8 @@
     "developer-tools",
     "plugin"
   ],
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "cross-spawn": "^7.0.6"
+  }
 }

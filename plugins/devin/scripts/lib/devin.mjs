@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import spawn from "cross-spawn";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -59,7 +59,7 @@ export function resolveDevinBinary({
   }
 
   if (platform === "win32") {
-    // Windows commands run through a shell that does its own PATH and PATHEXT lookup.
+    // cross-spawn resolves PATH and PATHEXT entries, including .cmd shims, on Windows.
     return { path: "devin", source: "path" };
   }
 
@@ -273,7 +273,9 @@ export function findTaskResumeCandidate(cwd) {
 
 export function runDevinPrint({ cwd, args, onStderr = null, onSpawn = null } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(getDevinBinary(), args, {
+    const binary = getDevinBinary();
+    // cross-spawn resolves Windows PATHEXT entries and safely quotes cmd-shim arguments.
+    const child = spawn(binary, args, {
       cwd,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],

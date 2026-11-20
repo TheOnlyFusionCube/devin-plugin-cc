@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import { createTempRepo } from "./fake-devin-fixture.mjs";
@@ -16,7 +18,7 @@ import {
 test("state round-trips config and jobs", () => {
   const repo = createTempRepo();
   try {
-    process.env.CLAUDE_PLUGIN_DATA = fs.mkdtempSync("/tmp/devin-plugin-data-");
+    process.env.CLAUDE_PLUGIN_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
     setConfig(repo.dir, "stopReviewGate", true);
     upsertJob(repo.dir, { id: "job-1", kind: "task", status: "running", summary: "test" });
 
@@ -34,7 +36,7 @@ test("state round-trips config and jobs", () => {
 test("upsertJob merges patches on existing jobs", () => {
   const repo = createTempRepo();
   try {
-    process.env.CLAUDE_PLUGIN_DATA = fs.mkdtempSync("/tmp/devin-plugin-data-");
+    process.env.CLAUDE_PLUGIN_DATA = fs.mkdtempSync(path.join(os.tmpdir(), "devin-plugin-data-"));
     upsertJob(repo.dir, { id: "job-1", status: "running", pid: 123 });
     upsertJob(repo.dir, { id: "job-1", status: "completed", pid: null });
     const jobs = listJobs(repo.dir);
@@ -51,7 +53,7 @@ test("upsertJob merges patches on existing jobs", () => {
 test("resolveStateDir is stable per workspace and slug-based", () => {
   const repo = createTempRepo();
   try {
-    process.env.CLAUDE_PLUGIN_DATA = "/tmp/devin-plugin-fixed";
+    process.env.CLAUDE_PLUGIN_DATA = path.join(os.tmpdir(), "devin-plugin-fixed");
     const dir1 = resolveStateDir(repo.dir);
     const dir2 = resolveStateDir(repo.dir);
     assert.equal(dir1, dir2);

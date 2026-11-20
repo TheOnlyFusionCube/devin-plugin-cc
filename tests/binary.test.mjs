@@ -74,13 +74,21 @@ test("devin on PATH beats the app bundle", () => {
   }
 });
 
-test("Desktop-only install selects the app bundle and uses its realpath", () => {
+test("Desktop-only install selects the app bundle and uses its realpath", (t) => {
   const root = makeDir("devin-resolve-");
   try {
     const real = makeExecutable(path.join(root, "real", "devin"));
     const link = path.join(root, "Devin.app", "devin");
     fs.mkdirSync(path.dirname(link), { recursive: true });
-    fs.symlinkSync(real, link);
+    try {
+      fs.symlinkSync(real, link);
+    } catch (error) {
+      if (error.code === "EPERM" || error.code === "EACCES") {
+        t.skip("symlinks are not permitted on this host (no Developer Mode / elevation)");
+        return;
+      }
+      throw error;
+    }
     const resolved = resolveDevinBinary({
       env: { PATH: path.join(root, "empty") },
       platform: "darwin",
@@ -104,7 +112,9 @@ test("app bundle candidate is ignored off macOS", () => {
   }
 });
 
-test("non-executable files and directories are skipped", () => {
+// Windows has no exec bit — fs.accessSync(X_OK) passes for every file, so
+// the non-executable-skip behavior is only meaningful on POSIX.
+test("non-executable files and directories are skipped", { skip: process.platform === "win32" }, () => {
   const root = makeDir("devin-resolve-");
   try {
     const plainFile = path.join(root, "plain", "devin");
@@ -167,7 +177,8 @@ test("setup reports not installed when no devin is reachable", () => {
     const { result, report } = runSetup({ PATH: emptyPath, [DESKTOP_CANDIDATE_ENV]: path.join(emptyPath, "missing") }, repo.dir);
     assert.equal(result.status, 0, result.stderr);
     assert.equal(report.devin.installed, false);
-    assert.equal(report.devin.path, null);
+    // Windows defers PATH and PATHEXT resolution to cross-spawn, even when the CLI is unreachable.
+    assert.equal(report.devin.path, process.platform === "win32" ? "devin" : null);
     assert.equal(report.ready, false);
   } finally {
     fs.rmSync(emptyPath, { recursive: true, force: true });
@@ -175,7 +186,9 @@ test("setup reports not installed when no devin is reachable", () => {
   }
 });
 
-test("Desktop-only machine: setup and task use the app-bundle binary", () => {
+// Desktop app-bundle resolution only exists on macOS; on Windows the
+// resolver returns bare "devin" for shell PATH lookup before candidates.
+test("Desktop-only machine: setup and task use the app-bundle binary", { skip: process.platform === "win32" }, () => {
   const repo = createTempRepo();
   const fake = createFakeDevin({ responseText: "FROM_BUNDLE" });
   const emptyPath = makeToolOnlyPath();
@@ -216,7 +229,9 @@ test("PATH devin wins over the app bundle in the companion", () => {
   const bundle = createFakeDevin();
   try {
     const { report } = runSetup({ PATH: onPath.dir, [DESKTOP_CANDIDATE_ENV]: bundle.binPath }, repo.dir);
-    assert.equal(report.devin.path, path.join(onPath.dir, "devin"));
+    // cross-spawn resolves the bare command through PATH and PATHEXT on Windows.
+    const expectedPath = process.platform === "win32" ? "devin" : path.join(onPath.dir, "devin");
+    assert.equal(report.devin.path, expectedPath);
     assert.equal(report.devin.source, "PATH");
   } finally {
     onPath.cleanup();

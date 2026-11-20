@@ -1,6 +1,34 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+function makeAccessors(dir, marker) {
+  return {
+    invocations() {
+      if (!fs.existsSync(marker)) {
+        return [];
+      }
+      return fs.readFileSync(marker, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+    },
+    // One entry per `devin -p` run, with the full argument string.
+    printRuns() {
+      const file = `${marker}.args`;
+      if (!fs.existsSync(file)) {
+        return [];
+      }
+      return fs.readFileSync(file, "utf8").trim().split("\n").filter((line) => line.startsWith("-p"));
+    },
+    argumentRuns() {
+      const file = `${marker}.argv`;
+      if (!fs.existsSync(file)) return [];
+      return fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+    },
+    lastPrompt() {
+      return fs.existsSync(`${marker}.lastprompt`) ? fs.readFileSync(`${marker}.lastprompt`, "utf8") : null;
+    },
+  };
+}
 
 // Creates a fake `devin` executable that answers the subcommands the companion
 // uses. The marker file records each -p invocation's prompt file for assertions.
@@ -58,6 +86,32 @@ JSON
     ;;
 esac
 `;
+  if (process.platform === "win32") {
+    // Windows cannot exec an extensionless bash script; ship a Node fake
+    // plus a .cmd shim instead.
+    fs.writeFileSync(
+      path.join(dir, "fixture.json"),
+      JSON.stringify({ responseText, exitCode, failAuth, loggedOutExitZero }),
+    );
+    fs.copyFileSync(
+      fileURLToPath(new URL("./fake-devin.js", import.meta.url)),
+      path.join(dir, "fake-devin.js"),
+    );
+    fs.writeFileSync(
+      path.join(dir, "devin.cmd"),
+      `@echo off\r\nnode "%~dp0fake-devin.js" %*\r\n`,
+    );
+    return {
+      dir,
+      binPath: path.join(dir, "devin.cmd"),
+      marker,
+      env: { DEVIN_COMPANION_DEVIN_BINARY: path.join(dir, "devin.cmd") },
+      ...makeAccessors(dir, marker),
+      cleanup() {
+        fs.rmSync(dir, { recursive: true, force: true });
+      },
+    };
+  }
   const binPath = path.join(dir, "devin");
   fs.writeFileSync(binPath, script, { mode: 0o755 });
   return {
