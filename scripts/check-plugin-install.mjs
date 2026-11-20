@@ -29,8 +29,10 @@ try {
   // Copy only the installable plugin, not the parent package.json or node_modules.
   fs.cpSync(source, pluginRoot, { recursive: true, filter: (entry) => path.basename(entry) !== "node_modules" });
   assert.ok(fs.existsSync(path.join(pluginRoot, "package-lock.json")));
-  checked(process.platform === "win32" ? "npm.cmd" : "npm",
-    ["ci", "--ignore-scripts", "--no-audit", "--no-fund"]);
+  // npm is distributed as npm.cmd on Windows; this is a fixed CI install command,
+  // not a path for user-controlled process arguments.
+  checked("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+    { shell: process.platform === "win32" });
   const { runCommand } = await import(pathToFileURL(path.join(pluginRoot, "scripts", "lib", "process.mjs")).href);
   const probe = runCommand(process.execPath, ["-e", "process.stdout.write('isolated-ok')"]);
   assert.ifError(probe.error);
