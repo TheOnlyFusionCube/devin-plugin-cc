@@ -59,7 +59,7 @@ export function resolveDevinBinary({
   }
 
   if (platform === "win32") {
-    // Windows commands run through a shell that does its own PATH and PATHEXT lookup.
+    // cross-spawn resolves PATH and PATHEXT entries, including .cmd shims, on Windows.
     return { path: "devin", source: "path" };
   }
 
